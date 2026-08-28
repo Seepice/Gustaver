@@ -3,194 +3,34 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具2.1.1</title>
+    <title>Wiki 替换器</title>
     <style>
-        /* ---------- 全局重置 ---------- */
         * { box-sizing: border-box; }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            margin: 0; padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* ---------- 主容器 ---------- */
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            position: relative;
-        }
-
-        /* ---------- 加载覆盖层 ---------- */
-        #loadingOverlay {
-            position: absolute;
-            inset: 0;
-            background: white;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            padding: 40px;
-            text-align: center;
-            transition: opacity 0.5s ease;
-        }
-        #loadingOverlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #loadingOverlay .icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        #loadingOverlay h2 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #0a1e2f;
-            margin-bottom: 8px;
-        }
-        #loadingOverlay p {
-            color: #4a5b6e;
-            font-size: 16px;
-            margin-bottom: 24px;
-        }
-        #loadingOverlay .folder-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 14px 40px;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(66,153,225,0.3);
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        #loadingOverlay .folder-btn:hover {
-            background: #3182ce;
-            transform: translateY(-2px);
-        }
-        #loadingOverlay .folder-btn input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        #loadingOverlay .status {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #4a5568;
-            min-height: 24px;
-        }
-        #loadingOverlay .status.error {
-            color: #e53e3e;
-        }
-        #loadingOverlay .status.success {
-            color: #38a169;
-        }
-
-        /* ---------- 原有样式 ---------- */
-        .mode-bar {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            background: #f1f4f9; border-radius: 40px; padding: 4px;
-            border: 1px solid #e2e8f0;
-        }
-        .mode-btn {
-            border: none; background: transparent;
-            padding: 10px 20px; border-radius: 32px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: all 0.2s; color: #4a5568;
-            white-space: nowrap;
-        }
-        .mode-btn:hover { background: rgba(255,255,255,0.6); }
-        .mode-btn.active {
-            background: #4299e1; color: white;
-            box-shadow: 0 4px 10px rgba(66,153,225,0.3);
-        }
-        .mode-btn.uty.active {
-            background: #ed8936; color: white;
-            box-shadow: 0 4px 10px rgba(237,137,54,0.3);
-        }
-        .row {
-            display: flex; gap: 20px; flex: 1;
-        }
-        .col {
-            flex: 1; display: flex; flex-direction: column; gap: 8px;
-        }
-        textarea {
-            width: 100%; height: 400px; padding: 12px;
-            font-size: 14px; font-family: 'Courier New', monospace;
-            border: 1px solid #cbd5e0; border-radius: 10px;
-            resize: vertical; background: #fdfdfe;
-            line-height: 1.6;
-        }
-        textarea:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.2); }
-        .toolbar {
-            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-        }
-        .btn {
-            background: #4299e1; color: white; border: none;
-            padding: 10px 24px; border-radius: 30px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 4px 8px rgba(66,153,225,0.2);
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn:hover { background: #3182ce; transform: translateY(-1px); }
-        .btn:active { transform: scale(0.97); }
-        .btn-secondary {
-            background: #edf2f7; color: #2d3748; box-shadow: none;
-        }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .status {
-            font-size: 13px; color: #4a5568;
-            background: #f7fafc; padding: 6px 16px; border-radius: 20px;
-            margin-left: auto;
-        }
-        .info {
-            font-size: 13px; color: #718096;
-            background: #ebf8ff; border-left: 4px solid #4299e1;
-            padding: 8px 16px; border-radius: 0 8px 8px 0;
-        }
-        @media (max-width: 700px) {
-            .row { flex-direction: column; }
-            textarea { height: 250px; }
-            .mode-btn { padding: 8px 14px; font-size: 13px; }
-        }
-    </style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { max-width: 1200px; width: 100%; background: white; border-radius: 16px; padding: 24px; }
+        textarea { width: 100%; height: 300px; padding: 12px; font-size: 14px; font-family: monospace; border: 1px solid #ccc; border-radius: 8px; }
+        .btn { background: #4299e1; color: white; border: none; padding: 10px 24px; border-radius: 30px; cursor: pointer; }
+        .btn:hover { background: #3182ce; }
+        .mode-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .mode-btn { padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; background: #e2e8f0; }
+        .mode-btn.active { background: #4299e1; color: white; }
+        .row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 250px; }
+        .toolbar { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .status { font-size: 14px; color: #4a5568; padding: 6px 16px; background: #f7fafc; border-radius: 20px; }
+        #loadingOverlay { text-align: center; padding: 40px; }
+        #progressBar { width: 0%; height: 6px; background: #4299e1; border-radius: 10px; transition: width 0.3s; }
+        #progressContainer { max-width: 400px; margin: 12px auto; display: none; }
 </head>
 <body>
-
 <div class="container" id="app">
-    <!-- ---------- 加载覆盖层 ---------- -->
     <div id="loadingOverlay">
-        <div class="icon">📂</div>
-        <h2>请加载词典至此处</h2>
-        <p>选择包含 <strong>ch1.js</strong> ~ <strong>ch5.js</strong> 和 <strong>uty.js</strong> 的文件夹</p>
-        <button class="folder-btn" id="folderBtn">
-            📁 选择文件夹
-            <input type="file" id="folderInput" webkitdirectory directory multiple />
-        </button>
-        <div class="status" id="loadStatus">等待加载...</div>
-        <div id="loadProgress" style="margin-top: 12px; font-size: 14px; color: #4a5568; min-height: 24px;"></div>
+        <h2>加载词典</h2>
+        <button id="folderBtn" style="padding:12px 30px;border:none;background:#4299e1;color:#fff;border-radius:40px;cursor:pointer;">📁 选择文件夹</button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;" />
+        <div id="progressContainer"><div id="progressBar"></div><div id="progressText">准备...</div></div>
+        <div id="loadStatus">等待加载...</div>
     </div>
-
-    <!-- ---------- 主界面（初始隐藏） ---------- -->
     <div id="mainContent" style="display:none;">
         <div class="mode-bar" id="modeBar">
             <button class="mode-btn active" data-mode="ch1">第1章</button>
@@ -198,774 +38,214 @@
             <button class="mode-btn" data-mode="ch3">第3章</button>
             <button class="mode-btn" data-mode="ch4">第4章</button>
             <button class="mode-btn" data-mode="ch5">第5章</button>
-            <button class="mode-btn uty" data-mode="uty">UTY</button>
+            <button class="mode-btn" data-mode="uty">UTY</button>
         </div>
-
-        <div class="info" id="infoText">
-            📌 DR模式：斜体匹配（忽略大小写，自动转换颜色标签）<br />
-            🔸 UTY模式：直接替换中文（忽略大小写，自动转换颜色标签）<br />
-            ⚡ 加粗内术语自动替换（Turn/Phase/Action/check/Neutral）<br />
-            📦 <code>{{Cite game|...}}</code> 内部字段自动整段匹配（无需手动加斜体）
-        </div>
-
         <div class="row">
-            <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">📥 输入文本</label>
-                <textarea id="inputArea" placeholder="在这里粘贴待处理的文本..."></textarea>
-            </div>
-            <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">📤 输出结果</label>
-                <textarea id="outputArea" placeholder="处理后的结果..." readonly></textarea>
-            </div>
+            <div class="col"><textarea id="inputArea" placeholder="输入文本..."></textarea></div>
+            <div class="col"><textarea id="outputArea" placeholder="输出结果..." readonly></textarea></div>
         </div>
-
         <div class="toolbar">
-            <button class="btn" id="processBtn">▶ 开始处理</button>
-            <button class="btn btn-secondary" id="copyBtn">📋 复制输出</button>
-            <button class="btn btn-secondary" id="clearOutputBtn">🗑 清空输出</button>
-            <button class="btn btn-secondary" id="pasteInputBtn">📎 粘贴到输入</button>
-            <button class="btn btn-secondary" id="applyToInputBtn">🔄 应用到输入</button>
+            <button class="btn" id="processBtn">▶ 处理</button>
+            <button class="btn" id="copyBtn">📋 复制</button>
+            <button class="btn" id="clearOutputBtn">🗑 清空</button>
             <span class="status" id="status">就绪</span>
         </div>
     </div>
 </div>
-
 <script>
-    (function() {
-        'use strict';
+(function(){
+    'use strict';
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+    const folderInput = document.getElementById('folderInput');
+    const loadStatus = document.getElementById('loadStatus');
+    const modeBar = document.getElementById('modeBar');
+    const inputArea = document.getElementById('inputArea');
+    const outputArea = document.getElementById('outputArea');
+    const statusDiv = document.getElementById('status');
+    const processBtn = document.getElementById('processBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearOutputBtn = document.getElementById('clearOutputBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
 
-        // ---------- DOM 引用 ----------
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const mainContent = document.getElementById('mainContent');
-        const folderInput = document.getElementById('folderInput');
-        const loadStatus = document.getElementById('loadStatus');
-        const modeBar = document.getElementById('modeBar');
-        const inputArea = document.getElementById('inputArea');
-        const outputArea = document.getElementById('outputArea');
-        const statusDiv = document.getElementById('status');
-        const infoText = document.getElementById('infoText');
-        const processBtn = document.getElementById('processBtn');
-        const copyBtn = document.getElementById('copyBtn');
-        const clearOutputBtn = document.getElementById('clearOutputBtn');
-        const pasteInputBtn = document.getElementById('pasteInputBtn');
-        const applyToInputBtn = document.getElementById('applyToInputBtn');
-
-        // ---------- 全局数据存储 ----------
-        let dataStore = {};
-        let currentMode = 'ch1';
-        let mapping = {};            // DR: {英文: ID}   UTY: {英文: 中文}
-        let keyOrder = [];
-        let chapterParam = null;
-        let isUTY = false;
-
-        // ---------- 工具函数 ----------
+    let dataStore = {};
+    let currentMode = 'ch1';
+    let mapping = {};
+    let keyOrder = [];
+    let chapterParam = null;
+    let isUTY = false;
         const BOLD_PLACEHOLDER = '\x01BOLD\x02';
-        function protectBold(text) { return text.replace(/'''/g, BOLD_PLACEHOLDER); }
-        function restoreBold(text) { return text.replace(new RegExp(BOLD_PLACEHOLDER.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), "'''"); }
-        function removeItalics(text) { return text.replace(/''(.*?)''/g, '$1'); }
-        function cleanValue(value) {
-            if (value.startsWith('* ')) return value.substring(2);
-            if (value.startsWith('*')) return value.substring(1);
-            return value;
-        }
-        function chineseNum(n) {
-            const nums = ['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'];
-            return nums[n] || String(n);
-        }
-        function keysMostlySame(key1, key2) {
-            const parts1 = key1.split('_');
-            const parts2 = key2.split('_');
-            if (parts1.length < 2 || parts2.length < 2) return false;
-            if (parts1.length !== parts2.length) return false;
-            const newParts1 = [...parts1];
-            const newParts2 = [...parts2];
-            newParts1[newParts1.length - 2] = '';
-            newParts2[newParts2.length - 2] = '';
-            return newParts1.join('_') === newParts2.join('_');
-        }
+    function protectBold(t){return t.replace(/'''/g,BOLD_PLACEHOLDER);}
+    function restoreBold(t){return t.replace(new RegExp(BOLD_PLACEHOLDER.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&'),'g'),"'''");}
+    function removeItalics(t){return t.replace(/''(.*?)''/g,'$1');}
+    function cleanValue(v){if(v.startsWith('* '))return v.substring(2);if(v.startsWith('*'))return v.substring(1);return v;}
+    function chineseNum(n){const a=['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'];return a[n]||String(n);}
+    function keysMostlySame(a,b){const p1=a.split('_'),p2=b.split('_');if(p1.length<2||p2.length<2)return false;if(p1.length!==p2.length)return false;const n1=[...p1],n2=[...p2];n1[n1.length-2]='';n2[n2.length-2]='';return n1.join('_')===n2.join('_');}
 
-        // ---------- 颜色标准化（输入：标签 → 控制码） ----------
-        function normalizeColorTags(text) {
-            const colorMap = {
-                'red': '\\cR',
-                'yellow': '\\cY',
-                'green': '\\cG',
-                'blue': '\\cB',
-                'cyan': '\\cC',
-                'magenta': '\\cM',
-                'orange': '\\cO',
-                'purple': '\\cP',
-                'white': '\\cW'
-            };
-            // 开标签替换
-            for (const [tag, code] of Object.entries(colorMap)) {
-                text = text.replace(new RegExp(`<${tag}>`, 'gi'), code);
-            }
-            // 闭合标签替换为 \cW
-            const closeTags = ['yellow','red','green','blue','cyan','magenta','orange','purple','white'];
-            for (const tag of closeTags) {
-                text = text.replace(new RegExp(`</${tag}>`, 'gi'), '\\cW');
-            }
-            // 压缩连续的 \cX 只保留最后一个
-            text = text.replace(/(\\c[A-Z])+/gi, (match) => {
-                const codes = match.match(/\\c[A-Z]/g);
-                return codes[codes.length - 1];
-            });
-            return text;
-        }
-
-        // ---------- 颜色反向转换（输出：控制码 → 标签） ----------
-        function denormalizeColorTags(text) {
-            const reverseMap = {
-                '\\cR': '<red>',
-                '\\cY': '<yellow>',
-                '\\cG': '<green>',
-                '\\cB': '<blue>',
-                '\\cC': '<cyan>',
-                '\\cM': '<magenta>',
-                '\\cO': '<orange>',
-                '\\cP': '<purple>',
-                '\\cW': '</yellow>'   // 统一闭合
-            };
-            // 按顺序替换，注意 \cW 最后替换
-            for (const [code, tag] of Object.entries(reverseMap)) {
-                text = text.replace(new RegExp(code.replace(/\\/g, '\\\\'), 'g'), tag);
-            }
-            return text;
-        }
-
-        // ---------- 加粗内术语替换 ----------
-        function applyBoldReplacements(line) {
-            return line.replace(/'''((?:(?!''').)*?)'''/g, (match, content) => {
-                let replaced = content;
-                replaced = replaced.replace(/Turn\s+(\d+)/gi, (_, num) => `第${chineseNum(parseInt(num))}回合`);
-                replaced = replaced.replace(/Phase\s+(\d+)/gi, (_, num) => `第${chineseNum(parseInt(num))}阶段`);
-                replaced = replaced.replace(/\bAction\b/gi, '行动');
-                replaced = replaced.replace(/\bcheck\b/gi, '检查');
-                replaced = replaced.replace(/Neutral/g, '中立');
-                return `'''${replaced}'''`;
-            });
-        }
-
-        // ---------- 斜体解析（支持span） ----------
-        function parseItalic(line) {
-            const match = line.match(/''(.*?)''/);
-            if (!match) return null;
-            const full = match[0];
-            const inside = match[1];
-            let hasSpan = false;
-            let spanTag = null;
-            let textBetween = inside;
-            if (inside.includes('<span')) {
-                const startTagEnd = inside.indexOf('>');
-                if (startTagEnd !== -1) {
-                    const closeTagStart = inside.lastIndexOf('</span>');
-                    if (closeTagStart !== -1 && closeTagStart > startTagEnd) {
-                        textBetween = inside.substring(startTagEnd + 1, closeTagStart);
-                        spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(closeTagStart);
-                        hasSpan = true;
-                    } else {
-                        const lastLt = inside.lastIndexOf('<');
-                        if (lastLt > startTagEnd) {
-                            textBetween = inside.substring(startTagEnd + 1, lastLt);
-                            spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(lastLt);
-                            hasSpan = true;
-                        }
-                    }
-                }
-            }
-            return { full, inside, hasSpan, spanTag, textBetween };
-        }
-
-        // ---------- 加载映射 ----------
-        function loadMapping(mode) {
-            if (!dataStore[mode]) {
-                statusDiv.textContent = `⚠️ 未找到 ${mode} 的数据`;
-                return false;
-            }
-            const rawObj = dataStore[mode];
-            if (mode === 'uty') {
-                mapping = rawObj;
-                keyOrder = [];
-                chapterParam = null;
-                isUTY = true;
-                statusDiv.textContent = `已加载 UTY 映射 (${Object.keys(mapping).length} 条)`;
-            } else {
-                keyOrder = [];
-                mapping = {};
-                for (const [key, value] of Object.entries(rawObj)) {
-                    if (!(value in mapping)) {
-                        mapping[value] = key;
-                        keyOrder.push(key);
-                    }
-                }
-                chapterParam = mode;
-                isUTY = false;
-                statusDiv.textContent = `已加载 ${mode.toUpperCase()} 映射 (${Object.keys(mapping).length} 条唯一值)`;
-            }
-            infoText.innerHTML = isUTY
-                ? '🔸 UTY模式：直接替换中文（忽略大小写，自动转换颜色标签）<br />⚡ 加粗术语替换<br />📦 Cite Game 内部字段自动整段匹配'
-                : `📌 DR模式：斜体匹配（忽略大小写，自动转换颜色标签） → <code>{{DR文本|ID|${chapterParam}}}</code><br />⚡ 加粗术语替换<br />📦 Cite Game 内部字段自动整段匹配`;
-            return true;
-        }
-
-        // ---------- 对单个字段（segment）应用斜体和加粗处理（用于 Cite Game） ----------
-        function processSegment(segment, isUTY) {
-            // 去除斜体标记，只保留内部文本（因为我们要整段匹配）
-            let text = segment.replace(/''(.*?)''/g, '$1'); // 去掉 '' 标记
-            // 但可能还有多余空格，保持原样
-            // 先进行颜色标准化（但外部已标准化，这里不再重复）
-            // 直接进行匹配
-            if (isUTY) {
-                // UTY: 英文→中文
-                let found = null;
-                for (const [en, zh] of Object.entries(mapping)) {
-                    if (en.toLowerCase() === text.toLowerCase()) {
-                        found = zh;
-                        break;
-                    }
-                }
-                return found !== null ? found : segment; // 匹配失败保留原段（含斜体标记）
-            } else {
-                // DR: 英文→ID
-                let foundKey = null;
-                for (const [value, key] of Object.entries(mapping)) {
-                    const clean = cleanValue(value);
-                    if (clean.toLowerCase() === text.toLowerCase()) {
-                        foundKey = key;
-                        break;
-                    }
-                }
-                if (foundKey !== null) {
-                    return `{{DR文本|${foundKey}|${chapterParam}}}`;
-                } else {
-                    return segment; // 保留原段
-                }
-            }
-        }
-
-        // ---------- 预处理：处理所有 {{Cite game|...}} 结构 ----------
-        function preprocessCiteGame(text, isUTY) {
-            return text.replace(/\{\{Cite game\|((?:[^|]+\|)*[^|]+)\}\}/g, (match, inner) => {
-                const segments = inner.split('|');
-                const processed = segments.map(seg => processSegment(seg, isUTY));
-                return `{{Cite game|${processed.join('|')}}}`;
-            });
-        }
-
-        // ---------- DR处理逻辑 ----------
-        function processDR(inputText) {
-            // inputText 已经过全局标准化（颜色标签已转控制码）
-            const lines = inputText.split('\n');
-            const protectedLines = lines.map(protectBold);
-            const lineData = protectedLines.map(line => {
-                const italicInfo = parseItalic(line);
-                let newLine, isReplaced, keyName;
-                if (italicInfo) {
-                    const matchText = italicInfo.textBetween;
-                    // 精确匹配（忽略大小写）
-                    let foundKey = null;
-                    for (const [value, key] of Object.entries(mapping)) {
-                        const clean = cleanValue(value);
-                        if (clean.toLowerCase() === matchText.toLowerCase()) {
-                            foundKey = key;
-                            break;
-                        }
-                    }
-                    if (foundKey !== null) {
-                        const template = `{{DR文本|${foundKey}|${chapterParam}}}`;
-                        newLine = line.replace(/''.*?''/, template);
-                        isReplaced = true;
-                        keyName = foundKey;
-                    } else {
-                        newLine = removeItalics(line);
-                        isReplaced = false;
-                        keyName = null;
-                    }
-                } else {
-                    newLine = line;
-                    isReplaced = false;
-                    keyName = null;
-                }
-                return { original: line, italicInfo, line: newLine, isReplaced, key: keyName };
-            });
-
-            // 上下文矫正（前缀匹配 + ID 序号）
-            for (let i = 0; i < lineData.length; i++) {
-                const data = lineData[i];
-                if (data.isReplaced) continue;
-                if (i > 0 && i < lineData.length - 1 &&
-                    lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
-                    const prevKey = lineData[i-1].key;
-                    const nextKey = lineData[i+1].key;
-                    const italicInfo = data.italicInfo;
-                    if (!italicInfo) continue;
-                    let correctedKey = null;
-                    if (keysMostlySame(prevKey, nextKey)) {
-                        const idxPrev = keyOrder.indexOf(prevKey);
-                        const idxNext = keyOrder.indexOf(nextKey);
-                        if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
-                            const midIdx = (idxPrev + idxNext) >> 1;
-                            correctedKey = keyOrder[midIdx];
-                        }
-                    }
-                    if (correctedKey === null) {
-                        const prevPrefix = prevKey.substring(0, 5);
-                        const nextPrefix = nextKey.substring(0, 5);
-                        const matchText = italicInfo.textBetween;
-                        for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                            const prefix = matchText.substring(0, len);
-                            let matches = [];
-                            for (const [value, key] of Object.entries(mapping)) {
-                                if (cleanValue(value).startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
-                            }
-                            if (matches.length === 1) { correctedKey = matches[0]; break; }
-                            matches = [];
-                            for (const [value, key] of Object.entries(mapping)) {
-                                if (cleanValue(value).startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
-                            }
-                            if (matches.length === 1) { correctedKey = matches[0]; break; }
-                        }
-                    }
-                    if (correctedKey !== null) {
-                        const template = `{{DR文本|${correctedKey}|${chapterParam}}}`;
-                        data.line = data.original.replace(/''.*?''/, template);
-                        data.isReplaced = true;
-                        data.key = correctedKey;
-                    }
-                }
-            }
-
-            // 第一遍修正（原逻辑）
-            for (let i = 0; i < lineData.length; i++) {
-                const data = lineData[i];
-                if (!data.isReplaced) continue;
-                if (i === 0 || i === lineData.length - 1) continue;
-                const prevData = lineData[i-1];
-                const nextData = lineData[i+1];
-                if (!prevData.isReplaced || !nextData.isReplaced) continue;
-                const curKey = data.key;
-                const prevKey = prevData.key;
-                const nextKey = nextData.key;
-                if (keysMostlySame(curKey, prevKey) || keysMostlySame(curKey, nextKey)) continue;
-                let correctedKey = null;
-                if (keysMostlySame(prevKey, nextKey)) {
-                    const idxPrev = keyOrder.indexOf(prevKey);
-                    const idxNext = keyOrder.indexOf(nextKey);
-                    if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
-                        const midIdx = (idxPrev + idxNext) >> 1;
-                        correctedKey = keyOrder[midIdx];
-                    }
-                }
-                if (correctedKey === null && data.italicInfo) {
-                    const prevPrefix = prevKey.substring(0, 5);
-                    const nextPrefix = nextKey.substring(0, 5);
-                    const matchText = data.italicInfo.textBetween;
-                    for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                        const prefix = matchText.substring(0, len);
-                        let matches = [];
-                        for (const [value, key] of Object.entries(mapping)) {
-                            if (cleanValue(value).startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
-                        matches = [];
-                        for (const [value, key] of Object.entries(mapping)) {
-                            if (cleanValue(value).startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
-                    }
-                }
-                if (correctedKey !== null) {
-                    const oldTemplate = `{{DR文本|${curKey}|${chapterParam}}}`;
-                    const newTemplate = `{{DR文本|${correctedKey}|${chapterParam}}}`;
-                    data.line = data.line.replace(oldTemplate, newTemplate);
-                    data.key = correctedKey;
-                } else {
-                    data.line = data.original;
-                    data.isReplaced = false;
-                    data.key = null;
-                }
-            }
-
-            let resultLines = lineData.map(d => {
-                let line = restoreBold(d.line);
-                line = applyBoldReplacements(line);
-                return line;
-            });
-            return resultLines.join('\n');
-        }
-
-        // ---------- UTY处理逻辑 ----------
-        function processUTY(inputText) {
-            const lines = inputText.split('\n');
-            const lineData = lines.map(line => {
-                let protectedLine = protectBold(line);
-                let newLine = protectedLine;
-                let isReplaced = false;
-                let keyName = null;
-                let italicInfo = null;
-
-                const match = protectedLine.match(/''(.*?)''/);
-                if (match) {
-                    const full = match[0];
-                    const inside = match[1];
-                    let hasSpan = false;
-                    let spanTag = null;
-                    let textBetween = inside;
-
-                    if (inside.includes('<span')) {
-                        const startTagEnd = inside.indexOf('>');
-                        if (startTagEnd !== -1) {
-                            const closeTagStart = inside.lastIndexOf('</span>');
-                            if (closeTagStart !== -1 && closeTagStart > startTagEnd) {
-                                textBetween = inside.substring(startTagEnd + 1, closeTagStart);
-                                spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(closeTagStart);
-                                hasSpan = true;
-                            } else {
-                                const lastLt = inside.lastIndexOf('<');
-                                if (lastLt > startTagEnd) {
-                                    textBetween = inside.substring(startTagEnd + 1, lastLt);
-                                    spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(lastLt);
-                                    hasSpan = true;
-                                }
-                            }
-                        }
-                    }
-
-                    let foundKey = null;
-                    for (const [en, zh] of Object.entries(mapping)) {
-                        if (en.toLowerCase() === textBetween.toLowerCase()) {
-                            foundKey = en;
-                            break;
-                        }
-                    }
-
-                    if (foundKey !== null) {
-                        const zhTranslation = mapping[foundKey];
-                        let replaceText = zhTranslation;
-                        if (hasSpan && spanTag) {
-                            replaceText = spanTag.replace(textBetween, zhTranslation);
-                        }
-                        newLine = protectedLine.replace(full, replaceText);
-                        isReplaced = true;
-                        keyName = foundKey;
-                    } else {
-                        newLine = protectedLine.replace(/''(.*?)''/g, '$1');
-                        isReplaced = false;
-                        keyName = null;
-                    }
-                    italicInfo = { full, inside, hasSpan, spanTag, textBetween };
-                }
-
-                return { original: protectedLine, italicInfo, line: newLine, isReplaced, key: keyName };
-            });
-
-            // 上下文矫正
-            for (let i = 0; i < lineData.length; i++) {
-                const data = lineData[i];
-                if (data.isReplaced) continue;
-                if (i > 0 && i < lineData.length - 1 &&
-                    lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
-                    const prevKey = lineData[i-1].key;
-                    const nextKey = lineData[i+1].key;
-                    const italicInfo = data.italicInfo;
-                    if (!italicInfo) continue;
-                    let correctedKey = null;
-                    if (keysMostlySame(prevKey, nextKey)) {
-                        const idxPrev = keyOrder.indexOf(prevKey);
-                        const idxNext = keyOrder.indexOf(nextKey);
-                        if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
-                            const midIdx = (idxPrev + idxNext) >> 1;
-                            correctedKey = keyOrder[midIdx];
-                        }
-                    }
-                    if (correctedKey === null) {
-                        const prevPrefix = prevKey.substring(0, 5);
-                        const nextPrefix = nextKey.substring(0, 5);
-                        const matchText = italicInfo.textBetween;
-                        for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                            const prefix = matchText.substring(0, len);
-                            let matches = [];
-                            for (const [en, zh] of Object.entries(mapping)) {
-                                if (en.startsWith(prefix) && en.startsWith(prevPrefix)) matches.push(en);
-                            }
-                            if (matches.length === 1) { correctedKey = matches[0]; break; }
-                            matches = [];
-                            for (const [en, zh] of Object.entries(mapping)) {
-                                if (en.startsWith(prefix) && en.startsWith(nextPrefix)) matches.push(en);
-                            }
-                            if (matches.length === 1) { correctedKey = matches[0]; break; }
-                        }
-                    }
-                    if (correctedKey !== null) {
-                        const zhTranslation = mapping[correctedKey];
-                        const full = italicInfo.full;
-                        let replaceText = zhTranslation;
-                        if (italicInfo.hasSpan && italicInfo.spanTag) {
-                            replaceText = italicInfo.spanTag.replace(italicInfo.textBetween, zhTranslation);
-                        }
-                        data.line = data.original.replace(full, replaceText);
-                        data.isReplaced = true;
-                        data.key = correctedKey;
-                    }
-                }
-            }
-
-            const resultLines = lineData.map(d => {
-                let line = restoreBold(d.line);
-                line = applyBoldReplacements(line);
-                return line;
-            });
-            return resultLines.join('\n');
-        }
-
-        // ---------- 主处理入口 ----------
-        function handleProcess() {
-            const input = inputArea.value;
-            if (!input.trim()) {
-                statusDiv.textContent = '⚠️ 请先输入文本';
-                return;
-            }
-            if (Object.keys(mapping).length === 0) {
-                statusDiv.textContent = '⚠️ 映射数据为空，请检查词典加载';
-                return;
-            }
-
-            // 1. 全局颜色标准化（输入 → 控制码）
-            let normalized = normalizeColorTags(input);
-
-            // 2. 预处理 {{Cite game}} 结构（内部字段整段匹配）
-            normalized = preprocessCiteGame(normalized, isUTY);
-
-            // 3. 主处理（斜体匹配等）
-            let result;
-            if (isUTY) {
-                result = processUTY(normalized);
-            } else {
-                result = processDR(normalized);
-            }
-
-            // 4. 后处理：控制码转回标签
-            result = denormalizeColorTags(result);
-
-            outputArea.value = result;
-            statusDiv.textContent = '✅ 处理完成';
-        }
-
-        // ---------- 模式切换 ----------
-        function switchMode(mode) {
-            if (mode === currentMode) return;
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.mode === mode) btn.classList.add('active');
-            });
-            currentMode = mode;
-            outputArea.value = '';
-            const success = loadMapping(mode);
-            if (!success) {
-                mapping = {};
-                keyOrder = [];
-            }
-        }
-
-        // ---------- 其他按钮 ----------
-        async function copyOutput() {
-            const text = outputArea.value;
-            if (!text) { statusDiv.textContent = '📋 没有内容可复制'; return; }
-            try {
-                await navigator.clipboard.writeText(text);
-                statusDiv.textContent = '📋 已复制到剪贴板';
-            } catch {
-                outputArea.select();
-                document.execCommand('copy');
-                statusDiv.textContent = '📋 已复制（降级方案）';
-            }
-        }
-        function clearOutput() { outputArea.value = ''; statusDiv.textContent = '输出已清空'; }
-        async function pasteToInput() {
-            try {
-                const text = await navigator.clipboard.readText();
-                if (text) { inputArea.value = text; statusDiv.textContent = '📎 已粘贴到输入框'; }
-                else { statusDiv.textContent = '剪贴板为空'; }
-            } catch (err) { statusDiv.textContent = '无法读取剪贴板，请手动粘贴'; }
-        }
-        applyToInputBtn.addEventListener('click', function() {
-            const output = outputArea.value;
-            if (!output) {
-                statusDiv.textContent = '⚠️ 输出为空，无法应用';
-                return;
-            }
-            inputArea.value = output;
-            outputArea.value = '';
-            statusDiv.textContent = '✅ 已应用到输入，输出已清空';
-        });
-// ---------- 自动从 txtmap 目录加载词典（用于 GitHub Pages） ----------
-async function autoLoadFromTxtmap() {
-    const fileNames = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'uty'];
-    const basePath = 'txtmap/';
-    const loadedData = {};
-    let allLoaded = true;
-    let loadedCount = 0;  // 👈 新增：计数器
-
-    for (const name of fileNames) {
-        // 👇 在这里插入以下三行
-        loadedCount++;
-        const progressEl = document.getElementById('loadProgress');
-        if (progressEl) {
-            progressEl.textContent = `正在加载 ${name}.js (${loadedCount}/${fileNames.length}) ...`;
-        }
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const text = await response.text();
-            const rawObj = new Function('return ' + text)();
-            if (typeof rawObj === 'object' && rawObj !== null) {
-                loadedData[name] = rawObj;
-            } else {
-                throw new Error('解析结果不是有效对象');
-            }
-        } catch (err) {
-            console.warn(`自动加载 ${name}.js 失败:`, err);
-            allLoaded = false;
-            break; // 只要有一个失败就放弃，让用户手动选择文件夹
-        }
+    function normalizeColorTags(t){
+        const m={'red':'\\cR','yellow':'\\cY','green':'\\cG','blue':'\\cB','cyan':'\\cC','magenta':'\\cM','orange':'\\cO','purple':'\\cP','white':'\\cW'};
+        for(const [tag,code] of Object.entries(m)){t=t.replace(new RegExp(`<${tag}>`,'gi'),code);}
+        ['yellow','red','green','blue','cyan','magenta','orange','purple','white'].forEach(tag=>{t=t.replace(new RegExp(`</${tag}>`,'gi'),'\\cW');});
+        t=t.replace(/(\\c[A-Z])+/gi,(m)=>{const c=m.match(/\\c[A-Z]/g);return c[c.length-1];});
+        return t;
     }
-
-    if (allLoaded && Object.keys(loadedData).length === fileNames.length) {
-        dataStore = loadedData;
-        const progressEl = document.getElementById('loadProgress');
-if (progressEl) progressEl.textContent = '✅ 所有词典加载完成！';
-        // 隐藏加载覆盖层
-        loadingOverlay.classList.add('hidden');
-        mainContent.style.display = 'block';
-        // 加载默认章节（ch1）
-        const success = loadMapping('ch1');
-        if (!success) {
-            const first = Object.keys(dataStore)[0];
-            if (first) {
-                loadMapping(first);
-                // 更新按钮高亮
-                document.querySelectorAll('.mode-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (btn.dataset.mode === first) btn.classList.add('active');
-                });
-                currentMode = first;
+    function denormalizeColorTags(t){
+        const m={'\\cR':'<red>','\\cY':'<yellow>','\\cG':'<green>','\\cB':'<blue>','\\cC':'<cyan>','\\cM':'<magenta>','\\cO':'<orange>','\\cP':'<purple>','\\cW':'</yellow>'};
+        for(const [code,tag] of Object.entries(m)){t=t.replace(new RegExp(code.replace(/\\/g,'\\\\'),'g'),tag);}
+        return t;
+    }
+    function applyBoldReplacements(line){
+        return line.replace(/'''((?:(?!''').)*?)'''/g,(m,c)=>{
+            let r=c;
+            r=r.replace(/Turn\s+(\d+)/gi,(_,n)=>`第${chineseNum(parseInt(n))}回合`);
+            r=r.replace(/Phase\s+(\d+)/gi,(_,n)=>`第${chineseNum(parseInt(n))}阶段`);
+            r=r.replace(/\bAction\b/gi,'行动');
+            r=r.replace(/\bcheck\b/gi,'检查');
+            r=r.replace(/Neutral/g,'中立');
+            return `'''${r}'''`;
+        });
+    }
+    function parseItalic(line){
+        const m=line.match(/''(.*?)''/);if(!m)return null;
+        const full=m[0],inside=m[1];let hasSpan=false,spanTag=null,textBetween=inside;
+        if(inside.includes('<span')){
+            const start=inside.indexOf('>');
+            if(start!==-1){
+                const close=inside.lastIndexOf('</span>');
+                if(close!==-1&&close>start){textBetween=inside.substring(start+1,close);spanTag=inside.substring(0,start+1)+inside.substring(close);hasSpan=true;}
+                else{const last=inside.lastIndexOf('<');if(last>start){textBetween=inside.substring(start+1,last);spanTag=inside.substring(0,start+1)+inside.substring(last);hasSpan=true;}}
             }
         }
-        loadStatus.textContent = '✅ 已自动加载 txtmap 目录下的词典';
-        loadStatus.className = 'status success';
+        return {full,inside,hasSpan,spanTag,textBetween};
+                 }
+            function loadMapping(mode){
+        if(!dataStore[mode]){statusDiv.textContent='⚠️ 未找到 '+mode+' 的数据';return false;}
+        const obj=dataStore[mode];
+        if(mode==='uty'){mapping=obj;keyOrder=[];chapterParam=null;isUTY=true;statusDiv.textContent='已加载 UTY ('+Object.keys(mapping).length+' 条)';}
+        else{keyOrder=[];mapping={};for(const [k,v] of Object.entries(obj)){if(!(v in mapping)){mapping[v]=k;keyOrder.push(k);}}chapterParam=mode;isUTY=false;statusDiv.textContent='已加载 '+mode.toUpperCase()+' ('+Object.keys(mapping).length+' 条)';}
         return true;
-    } else {
-        const progressEl = document.getElementById('loadProgress');
-if (progressEl) progressEl.textContent = '❌ 自动加载失败，请手动选择文件夹';
-        return false;
     }
-}
-// ---------- 尝试自动加载，失败则显示选择文件夹界面 ----------
-autoLoadFromTxtmap().then(success => {
-    if (!success) {
-        loadingOverlay.classList.remove('hidden');
-        mainContent.style.display = 'none';
-        loadStatus.textContent = '请手动选择包含词典的文件夹';
-        loadStatus.className = 'status';
+    function processSegment(seg,isUTY){
+        let text=seg.replace(/''(.*?)''/g,'$1');
+        if(isUTY){for(const [en,zh] of Object.entries(mapping)){if(en.toLowerCase()===text.toLowerCase())return zh;}return seg;}
+        else{for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).toLowerCase()===text.toLowerCase())return `{{DR文本|${k}|${chapterParam}}}`;}return seg;}
     }
-});
-        // ---------- 加载文件夹 ----------
-        folderInput.addEventListener('change', async function(e) {
-            const files = e.target.files;
-            if (!files || files.length === 0) {
-                loadStatus.textContent = '❌ 未选择任何文件';
-                loadStatus.className = 'status error';
-                return;
-            }
-
-            loadStatus.textContent = '⏳ 正在读取文件...';
-            loadStatus.className = 'status';
-
-            const fileMap = {};
-            for (const file of files) {
-                const name = file.name;
-                if (!name.endsWith('.js')) continue;
-                const base = name.replace(/\.js$/, '');
-                if (!/^ch[1-5]$/.test(base) && base !== 'uty') continue;
-                fileMap[base] = file;
-            }
-
-            const expected = ['ch1','ch2','ch3','ch4','ch5','uty'];
-            const found = Object.keys(fileMap);
-            const missing = expected.filter(m => !found.includes(m));
-
-            if (found.length === 0) {
-                loadStatus.textContent = '❌ 未找到任何 ch1~ch5.js 或 uty.js 文件';
-                loadStatus.className = 'status error';
-                return;
-            }
-
-            const loadedData = {};
-            let errorCount = 0;
-            for (const [mode, file] of Object.entries(fileMap)) {
-                try {
-                    const text = await file.text();
-                    const rawObj = (new Function('return ' + text))();
-                    if (typeof rawObj === 'object' && rawObj !== null) {
-                        loadedData[mode] = rawObj;
-                    } else {
-                        throw new Error('文件内容不是有效对象');
+    function preprocessCiteGame(text,isUTY){
+        return text.replace(/\{\{Cite game\|((?:[^|]+\|)*[^|]+)\}\}/g,(m,inner)=>{const segs=inner.split('|');const processed=segs.map(s=>processSegment(s,isUTY));return `{{Cite game|${processed.join('|')}}}`;});
+    }
+    function processDR(input){
+        const lines=input.split('\n');
+        const protectedLines=lines.map(protectBold);
+        const lineData=protectedLines.map(line=>{
+            const info=parseItalic(line);
+            let newLine,isReplaced,keyName;
+            if(info){
+                const mt=info.textBetween;let found=null;
+                for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).toLowerCase()===mt.toLowerCase()){found=k;break;}}
+                if(found!==null){newLine=line.replace(/''.*?''/,`{{DR文本|${found}|${chapterParam}}}`);isReplaced=true;keyName=found;}
+                else{newLine=removeItalics(line);isReplaced=false;keyName=null;}
+            }else{newLine=line;isReplaced=false;keyName=null;}
+            return {original:line,italicInfo:info,line:newLine,isReplaced,key:keyName};
+        });
+        for(let i=0;i<lineData.length;i++){const d=lineData[i];if(d.isReplaced)continue;if(i>0&&i<lineData.length-1&&lineData[i-1].isReplaced&&lineData[i+1].isReplaced){const prev=lineData[i-1].key,next=lineData[i+1].key,info=d.italicInfo;if(!info)continue;let corr=null;if(keysMostlySame(prev,next)){const pi=keyOrder.indexOf(prev),ni=keyOrder.indexOf(next);if(pi!==-1&&ni!==-1&&Math.abs(pi-ni)===2){corr=keyOrder[(pi+ni)>>1];}}if(corr===null){const pp=prev.substring(0,5),np=next.substring(0,5),mt=info.textBetween;for(let len=3;len<=Math.min(10,mt.length);len++){const pre=mt.substring(0,len);let ms=[];for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).startsWith(pre)&&k.startsWith(pp))ms.push(k);}if(ms.length===1){corr=ms[0];break;}ms=[];for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).startsWith(pre)&&k.startsWith(np))ms.push(k);}if(ms.length===1){corr=ms[0];break;}}}if(corr!==null){d.line=d.original.replace(/''.*?''/,`{{DR文本|${corr}|${chapterParam}}}`);d.isReplaced=true;d.key=corr;}}}
+        for(let i=0;i<lineData.length;i++){const d=lineData[i];if(!d.isReplaced)continue;if(i===0||i===lineData.length-1)continue;const pd=lineData[i-1],nd=lineData[i+1];if(!pd.isReplaced||!nd.isReplaced)continue;const cur=d.key,prev=pd.key,next=nd.key;if(keysMostlySame(cur,prev)||keysMostlySame(cur,next))continue;let corr=null;if(keysMostlySame(prev,next)){const pi=keyOrder.indexOf(prev),ni=keyOrder.indexOf(next);if(pi!==-1&&ni!==-1&&Math.abs(pi-ni)===2){corr=keyOrder[(pi+ni)>>1];}}if(corr===null&&d.italicInfo){const pp=prev.substring(0,5),np=next.substring(0,5),mt=d.italicInfo.textBetween;for(let len=3;len<=Math.min(10,mt.length);len++){const pre=mt.substring(0,len);let ms=[];for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).startsWith(pre)&&k.startsWith(pp))ms.push(k);}if(ms.length===1){corr=ms[0];break;}ms=[];for(const [v,k] of Object.entries(mapping)){if(cleanValue(v).startsWith(pre)&&k.startsWith(np))ms.push(k);}if(ms.length===1){corr=ms[0];break;}}}if(corr!==null){const oldT=`{{DR文本|${cur}|${chapterParam}}}`;const newT=`{{DR文本|${corr}|${chapterParam}}}`;d.line=d.line.replace(oldT,newT);d.key=corr;}else{d.line=d.original;d.isReplaced=false;d.key=null;}}
+        return lineData.map(d=>{let line=restoreBold(d.line);line=applyBoldReplacements(line);return line;}).join('\n');
+             }
+        function processUTY(input){
+        const lines=input.split('\n');
+        const lineData=lines.map(line=>{
+            let pl=protectBold(line),nl=pl,isReplaced=false,keyName=null,info=null;
+            const m=pl.match(/''(.*?)''/);
+            if(m){
+                const full=m[0],inside=m[1];let hasSpan=false,spanTag=null,textBetween=inside;
+                if(inside.includes('<span')){
+                    const start=inside.indexOf('>');
+                    if(start!==-1){
+                        const close=inside.lastIndexOf('</span>');
+                        if(close!==-1&&close>start){textBetween=inside.substring(start+1,close);spanTag=inside.substring(0,start+1)+inside.substring(close);hasSpan=true;}
+                        else{const last=inside.lastIndexOf('<');if(last>start){textBetween=inside.substring(start+1,last);spanTag=inside.substring(0,start+1)+inside.substring(last);hasSpan=true;}}
                     }
-                } catch (err) {
-                    errorCount++;
-                    console.error(`加载 ${mode}.js 失败:`, err);
-                    loadStatus.textContent = `❌ 加载 ${mode}.js 失败: ${err.message}`;
-                    loadStatus.className = 'status error';
                 }
+                let found=null;
+                for(const [en,zh] of Object.entries(mapping)){if(en.toLowerCase()===textBetween.toLowerCase()){found=en;break;}}
+                if(found!==null){
+                    let rep=mapping[found];
+                    if(hasSpan&&spanTag)rep=spanTag.replace(textBetween,rep);
+                    nl=pl.replace(full,rep);isReplaced=true;keyName=found;
+                }else{nl=pl.replace(/''(.*?)''/g,'$1');isReplaced=false;keyName=null;}
+                info={full,inside,hasSpan,spanTag,textBetween};
             }
-
-            if (Object.keys(loadedData).length === 0) {
-                loadStatus.textContent = '❌ 所有文件加载失败，请检查格式';
-                loadStatus.className = 'status error';
-                return;
-            }
-
-            dataStore = loadedData;
-
-            let msg = `✅ 成功加载 ${Object.keys(loadedData).length} 个词典文件`;
-            if (missing.length > 0) msg += `，缺失: ${missing.join(', ')}`;
-            if (errorCount > 0) msg += `，有 ${errorCount} 个文件加载失败（请查看控制台）`;
-            loadStatus.textContent = msg;
-            loadStatus.className = 'status success';
-
-            loadingOverlay.classList.add('hidden');
-            mainContent.style.display = 'block';
-
-            const success = loadMapping('ch1');
-            if (!success) {
-                const first = Object.keys(dataStore)[0];
-                if (first) {
-                    loadMapping(first);
-                    document.querySelectorAll('.mode-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                        if (btn.dataset.mode === first) btn.classList.add('active');
-                    });
-                    currentMode = first;
-                } else {
-                    statusDiv.textContent = '⚠️ 没有可用的词典数据';
-                }
-            }
+            return {original:pl,italicInfo:info,line:nl,isReplaced,key:keyName};
         });
-
-        // ---------- 事件绑定 ----------
-        modeBar.addEventListener('click', e => {
-            const btn = e.target.closest('.mode-btn');
-            if (!btn) return;
-            switchMode(btn.dataset.mode);
-        });
-        processBtn.addEventListener('click', handleProcess);
-        copyBtn.addEventListener('click', copyOutput);
-        clearOutputBtn.addEventListener('click', clearOutput);
-        pasteInputBtn.addEventListener('click', pasteToInput);
-
-        // 初始状态
-        loadStatus.textContent = '等待加载...';
-        loadStatus.className = 'status';
-    })();
+        for(let i=0;i<lineData.length;i++){const d=lineData[i];if(d.isReplaced)continue;if(i>0&&i<lineData.length-1&&lineData[i-1].isReplaced&&lineData[i+1].isReplaced){const prev=lineData[i-1].key,next=lineData[i+1].key,info=d.italicInfo;if(!info)continue;let corr=null;if(keysMostlySame(prev,next)){const pi=keyOrder.indexOf(prev),ni=keyOrder.indexOf(next);if(pi!==-1&&ni!==-1&&Math.abs(pi-ni)===2){corr=keyOrder[(pi+ni)>>1];}}if(corr===null){const pp=prev.substring(0,5),np=next.substring(0,5),mt=info.textBetween;for(let len=3;len<=Math.min(10,mt.length);len++){const pre=mt.substring(0,len);let ms=[];for(const [en,zh] of Object.entries(mapping)){if(en.startsWith(pre)&&en.startsWith(pp))ms.push(en);}if(ms.length===1){corr=ms[0];break;}ms=[];for(const [en,zh] of Object.entries(mapping)){if(en.startsWith(pre)&&en.startsWith(np))ms.push(en);}if(ms.length===1){corr=ms[0];break;}}}if(corr!==null){const rep=mapping[corr];let repText=rep;if(info.hasSpan&&info.spanTag)repText=info.spanTag.replace(info.textBetween,rep);d.line=d.original.replace(info.full,repText);d.isReplaced=true;d.key=corr;}}}
+        return lineData.map(d=>{let line=restoreBold(d.line);line=applyBoldReplacements(line);return line;}).join('\n');
+    }
+    function handleProcess(){
+        const input=inputArea.value;
+        if(!input.trim()){statusDiv.textContent='⚠️ 请先输入文本';return;}
+        if(Object.keys(mapping).length===0){statusDiv.textContent='⚠️ 映射为空';return;}
+        let norm=normalizeColorTags(input);
+        norm=preprocessCiteGame(norm,isUTY);
+        let result=isUTY?processUTY(norm):processDR(norm);
+        result=denormalizeColorTags(result);
+        outputArea.value=result;
+        statusDiv.textContent='✅ 完成';
+    }
+    function switchMode(mode){
+        if(mode===currentMode)return;
+        document.querySelectorAll('.mode-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.mode===mode)b.classList.add('active');});
+        currentMode=mode;outputArea.value='';
+        if(!loadMapping(mode)){mapping={};keyOrder=[];}
+            }
+        function updateProgress(cur,total,name,st){const p=total>0?Math.round((cur/total)*100):0;progressBar.style.width=p+'%';progressText.textContent=`加载 ${name} (${p}%)`;if(st)loadStatus.textContent=st;}
+    async function autoLoad(){
+        const names=['ch1','ch2','ch3','ch4','ch5','uty'],base='txtmap/';
+        const loaded={};let all=true;
+        progressContainer.style.display='block';progressBar.style.width='0%';progressText.textContent='准备...';
+        for(let i=0;i<names.length;i++){
+            const name=names[i];
+            updateProgress(i,names.length,name,`加载 ${name}.js ...`);
+            try{const url=base+name+'.js';const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);const txt=await r.text();const obj=new Function('return '+txt)();if(typeof obj==='object'&&obj!==null)loaded[name]=obj;else throw new Error('无效对象');}
+            catch(e){console.warn('自动加载 '+name+'.js 失败:',e);all=false;break;}
+        }
+        if(all&&Object.keys(loaded).length===names.length){
+            progressBar.style.width='100%';progressText.textContent='✅ 完成！';
+            dataStore=loaded;loadingOverlay.classList.add('hidden');mainContent.style.display='block';
+            if(!loadMapping('ch1')){const first=Object.keys(dataStore)[0];if(first){loadMapping(first);document.querySelectorAll('.mode-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.mode===first)b.classList.add('active');});currentMode=first;}}
+            loadStatus.textContent='✅ 已自动加载';loadStatus.className='status success';return true;
+        }else{progressText.textContent='⚠️ 自动加载失败';loadStatus.textContent='请手动选择文件夹';loadStatus.className='status error';progressContainer.style.display='none';return false;}
+    }
+    autoLoad().then(s=>{if(!s){loadingOverlay.classList.remove('hidden');mainContent.style.display='none';loadStatus.textContent='请手动选择文件夹';loadStatus.className='status';progressContainer.style.display='none';}});
+    document.getElementById('folderBtn').addEventListener('click',()=>{document.getElementById('folderInput').click();});
+    folderInput.addEventListener('change',async function(e){
+        const files=e.target.files;if(!files||files.length===0){loadStatus.textContent='❌ 未选择文件';loadStatus.className='status error';return;}
+        loadStatus.textContent='⏳ 读取中...';loadStatus.className='status';
+        progressContainer.style.display='block';progressBar.style.width='0%';progressText.textContent='准备...';
+        const fileMap={};for(const f of files){const name=f.name;if(!name.endsWith('.js'))continue;const base=name.replace(/\.js$/,'');if(!/^ch[1-5]$/.test(base)&&base!=='uty')continue;fileMap[base]=f;}
+        const expected=['ch1','ch2','ch3','ch4','ch5','uty'];const found=Object.keys(fileMap);const missing=expected.filter(m=>!found.includes(m));
+        if(found.length===0){loadStatus.textContent='❌ 未找到词典文件';loadStatus.className='status error';progressContainer.style.display='none';return;}
+        const loaded={};let err=0;let processed=0;const total=found.length;
+        for(const [mode,file] of Object.entries(fileMap)){
+            processed++;updateProgress(processed,total,file.name,`加载 ${file.name} ...`);
+            try{const txt=await file.text();const obj=new Function('return '+txt)();if(typeof obj==='object'&&obj!==null)loaded[mode]=obj;else throw new Error('无效对象');}
+            catch(e){err++;console.error('加载 '+mode+'.js 失败:',e);loadStatus.textContent='❌ 加载 '+mode+'.js 失败';loadStatus.className='status error';}
+        }
+        progressBar.style.width='100%';progressText.textContent='✅ 加载完成！';
+        if(Object.keys(loaded).length===0){loadStatus.textContent='❌ 全部加载失败';loadStatus.className='status error';progressContainer.style.display='none';return;}
+        dataStore=loaded;
+        let msg='✅ 成功加载 '+Object.keys(loaded).length+' 个文件';if(missing.length>0)msg+='，缺失: '+missing.join(', ');if(err>0)msg+='，'+err+' 个失败';
+        loadStatus.textContent=msg;loadStatus.className='status success';
+        loadingOverlay.classList.add('hidden');mainContent.style.display='block';
+        if(!loadMapping('ch1')){const first=Object.keys(dataStore)[0];if(first){loadMapping(first);document.querySelectorAll('.mode-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.mode===first)b.classList.add('active');});currentMode=first;}}
+    });
+    modeBar.addEventListener('click',e=>{const b=e.target.closest('.mode-btn');if(!b)return;switchMode(b.dataset.mode);});
+    processBtn.addEventListener('click',handleProcess);
+    copyBtn.addEventListener('click',async()=>{const t=outputArea.value;if(!t){statusDiv.textContent='📋 无内容';return;}try{await navigator.clipboard.writeText(t);statusDiv.textContent='📋 已复制';}catch{outputArea.select();document.execCommand('copy');statusDiv.textContent='📋 已复制';}});
+    clearOutputBtn.addEventListener('click',()=>{outputArea.value='';statusDiv.textContent='已清空';});
+    loadingOverlay.classList.remove('hidden');mainContent.style.display='none';loadStatus.textContent='等待加载...';loadStatus.className='status';progressContainer.style.display='none';
+})();
 </script>
 </body>
 </html>
