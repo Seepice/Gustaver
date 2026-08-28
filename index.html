@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具（最终版）</title>
+    <title>Wiki 文本处理工具2.2.0</title>
     <style>
         /* ---------- 全局重置 ---------- */
         * { box-sizing: border-box; }
@@ -17,7 +17,6 @@
             align-items: center;
         }
 
-        /* ---------- 主容器 ---------- */
         .container {
             max-width: 1200px;
             width: 100%;
@@ -31,7 +30,6 @@
             position: relative;
         }
 
-        /* ---------- 加载覆盖层 ---------- */
         #loadingOverlay {
             position: absolute;
             inset: 0;
@@ -105,79 +103,36 @@
             color: #38a169;
         }
 
-        /* ---------- 原有样式 ---------- */
-        .mode-bar {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            background: #f1f4f9; border-radius: 40px; padding: 4px;
-            border: 1px solid #e2e8f0;
+        #progressContainer {
+            width: 80%;
+            max-width: 400px;
+            margin: 12px auto 8px;
+            display: none;
         }
-        .mode-btn {
-            border: none; background: transparent;
-            padding: 10px 20px; border-radius: 32px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: all 0.2s; color: #4a5568;
-            white-space: nowrap;
+        #progressBar {
+            width: 0%;
+            height: 8px;
+            background: #4299e1;
+            border-radius: 10px;
+            transition: width 0.3s ease;
         }
-        .mode-btn:hover { background: rgba(255,255,255,0.6); }
-        .mode-btn.active {
-            background: #4299e1; color: white;
-            box-shadow: 0 4px 10px rgba(66,153,225,0.3);
+        #progressText {
+            font-size: 14px;
+            color: #4a5568;
+            margin-top: 4px;
+            min-height: 20px;
         }
-        .mode-btn.uty.active {
-            background: #ed8936; color: white;
-            box-shadow: 0 4px 10px rgba(237,137,54,0.3);
-        }
-        .row {
-            display: flex; gap: 20px; flex: 1;
-        }
-        .col {
-            flex: 1; display: flex; flex-direction: column; gap: 8px;
-        }
-        textarea {
-            width: 100%; height: 400px; padding: 12px;
-            font-size: 14px; font-family: 'Courier New', monospace;
-            border: 1px solid #cbd5e0; border-radius: 10px;
-            resize: vertical; background: #fdfdfe;
-            line-height: 1.6;
-        }
-        textarea:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.2); }
-        .toolbar {
-            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-        }
-        .btn {
-            background: #4299e1; color: white; border: none;
-            padding: 10px 24px; border-radius: 30px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 4px 8px rgba(66,153,225,0.2);
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn:hover { background: #3182ce; transform: translateY(-1px); }
-        .btn:active { transform: scale(0.97); }
-        .btn-secondary {
-            background: #edf2f7; color: #2d3748; box-shadow: none;
-        }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .status {
-            font-size: 13px; color: #4a5568;
-            background: #f7fafc; padding: 6px 16px; border-radius: 20px;
-            margin-left: auto;
-        }
-        .info {
-            font-size: 13px; color: #718096;
-            background: #ebf8ff; border-left: 4px solid #4299e1;
-            padding: 8px 16px; border-radius: 0 8px 8px 0;
-        }
-        @media (max-width: 700px) {
-            .row { flex-direction: column; }
-            textarea { height: 250px; }
-            .mode-btn { padding: 8px 14px; font-size: 13px; }
-        }
-    </style>
 </head>
 <body>
+```
 
+---
+
+📦 Part 2 – HTML 主体（加载界面 + 主界面框架）
+
+```html
 <div class="container" id="app">
-    <!-- ---------- 加载覆盖层 ---------- -->
+    <!-- 加载覆盖层 -->
     <div id="loadingOverlay">
         <div class="icon">📂</div>
         <h2>请加载词典至此处</h2>
@@ -186,10 +141,14 @@
             📁 选择文件夹
             <input type="file" id="folderInput" webkitdirectory directory multiple />
         </button>
+        <div id="progressContainer">
+            <div id="progressBar"></div>
+            <div id="progressText">准备加载...</div>
+        </div>
         <div class="status" id="loadStatus">等待加载...</div>
     </div>
 
-    <!-- ---------- 主界面（初始隐藏） ---------- -->
+    <!-- 主界面（初始隐藏） -->
     <div id="mainContent" style="display:none;">
         <div class="mode-bar" id="modeBar">
             <button class="mode-btn active" data-mode="ch1">第1章</button>
@@ -232,7 +191,13 @@
 <script>
     (function() {
         'use strict';
+```
 
+---
+
+📦 Part 3 – JavaScript：DOM引用 + 工具函数 + 颜色处理
+
+```javascript
         // ---------- DOM 引用 ----------
         const loadingOverlay = document.getElementById('loadingOverlay');
         const mainContent = document.getElementById('mainContent');
@@ -249,10 +214,14 @@
         const pasteInputBtn = document.getElementById('pasteInputBtn');
         const applyToInputBtn = document.getElementById('applyToInputBtn');
 
-        // ---------- 全局数据存储 ----------
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+
+        // ---------- 全局数据 ----------
         let dataStore = {};
         let currentMode = 'ch1';
-        let mapping = {};            // DR: {英文: ID}   UTY: {英文: 中文}
+        let mapping = {};
         let keyOrder = [];
         let chapterParam = null;
         let isUTY = false;
@@ -283,29 +252,19 @@
             return newParts1.join('_') === newParts2.join('_');
         }
 
-        // ---------- 颜色标准化（输入：标签 → 控制码） ----------
+        // ---------- 颜色标准化 ----------
         function normalizeColorTags(text) {
             const colorMap = {
-                'red': '\\cR',
-                'yellow': '\\cY',
-                'green': '\\cG',
-                'blue': '\\cB',
-                'cyan': '\\cC',
-                'magenta': '\\cM',
-                'orange': '\\cO',
-                'purple': '\\cP',
-                'white': '\\cW'
+                'red': '\\cR', 'yellow': '\\cY', 'green': '\\cG', 'blue': '\\cB',
+                'cyan': '\\cC', 'magenta': '\\cM', 'orange': '\\cO', 'purple': '\\cP', 'white': '\\cW'
             };
-            // 开标签替换
             for (const [tag, code] of Object.entries(colorMap)) {
                 text = text.replace(new RegExp(`<${tag}>`, 'gi'), code);
             }
-            // 闭合标签替换为 \cW
             const closeTags = ['yellow','red','green','blue','cyan','magenta','orange','purple','white'];
             for (const tag of closeTags) {
                 text = text.replace(new RegExp(`</${tag}>`, 'gi'), '\\cW');
             }
-            // 压缩连续的 \cX 只保留最后一个
             text = text.replace(/(\\c[A-Z])+/gi, (match) => {
                 const codes = match.match(/\\c[A-Z]/g);
                 return codes[codes.length - 1];
@@ -313,20 +272,12 @@
             return text;
         }
 
-        // ---------- 颜色反向转换（输出：控制码 → 标签） ----------
         function denormalizeColorTags(text) {
             const reverseMap = {
-                '\\cR': '<red>',
-                '\\cY': '<yellow>',
-                '\\cG': '<green>',
-                '\\cB': '<blue>',
-                '\\cC': '<cyan>',
-                '\\cM': '<magenta>',
-                '\\cO': '<orange>',
-                '\\cP': '<purple>',
-                '\\cW': '</yellow>'   // 统一闭合
+                '\\cR': '<red>', '\\cY': '<yellow>', '\\cG': '<green>', '\\cB': '<blue>',
+                '\\cC': '<cyan>', '\\cM': '<magenta>', '\\cO': '<orange>', '\\cP': '<purple>',
+                '\\cW': '</yellow>'
             };
-            // 按顺序替换，注意 \cW 最后替换
             for (const [code, tag] of Object.entries(reverseMap)) {
                 text = text.replace(new RegExp(code.replace(/\\/g, '\\\\'), 'g'), tag);
             }
@@ -345,8 +296,14 @@
                 return `'''${replaced}'''`;
             });
         }
+```
 
-        // ---------- 斜体解析（支持span） ----------
+---
+
+📦 Part 4 – JavaScript：解析器 + 处理逻辑（DR / UTY）
+
+```javascript
+        // ---------- 斜体解析 ----------
         function parseItalic(line) {
             const match = line.match(/''(.*?)''/);
             if (!match) return null;
@@ -408,15 +365,10 @@
             return true;
         }
 
-        // ---------- 对单个字段（segment）应用斜体和加粗处理（用于 Cite Game） ----------
+        // ---------- Cite Game 字段处理 ----------
         function processSegment(segment, isUTY) {
-            // 去除斜体标记，只保留内部文本（因为我们要整段匹配）
-            let text = segment.replace(/''(.*?)''/g, '$1'); // 去掉 '' 标记
-            // 但可能还有多余空格，保持原样
-            // 先进行颜色标准化（但外部已标准化，这里不再重复）
-            // 直接进行匹配
+            let text = segment.replace(/''(.*?)''/g, '$1');
             if (isUTY) {
-                // UTY: 英文→中文
                 let found = null;
                 for (const [en, zh] of Object.entries(mapping)) {
                     if (en.toLowerCase() === text.toLowerCase()) {
@@ -424,9 +376,8 @@
                         break;
                     }
                 }
-                return found !== null ? found : segment; // 匹配失败保留原段（含斜体标记）
+                return found !== null ? found : segment;
             } else {
-                // DR: 英文→ID
                 let foundKey = null;
                 for (const [value, key] of Object.entries(mapping)) {
                     const clean = cleanValue(value);
@@ -438,12 +389,11 @@
                 if (foundKey !== null) {
                     return `{{DR文本|${foundKey}|${chapterParam}}}`;
                 } else {
-                    return segment; // 保留原段
+                    return segment;
                 }
             }
         }
 
-        // ---------- 预处理：处理所有 {{Cite game|...}} 结构 ----------
         function preprocessCiteGame(text, isUTY) {
             return text.replace(/\{\{Cite game\|((?:[^|]+\|)*[^|]+)\}\}/g, (match, inner) => {
                 const segments = inner.split('|');
@@ -452,9 +402,8 @@
             });
         }
 
-        // ---------- DR处理逻辑 ----------
+        // ---------- DR处理 ----------
         function processDR(inputText) {
-            // inputText 已经过全局标准化（颜色标签已转控制码）
             const lines = inputText.split('\n');
             const protectedLines = lines.map(protectBold);
             const lineData = protectedLines.map(line => {
@@ -462,7 +411,6 @@
                 let newLine, isReplaced, keyName;
                 if (italicInfo) {
                     const matchText = italicInfo.textBetween;
-                    // 精确匹配（忽略大小写）
                     let foundKey = null;
                     for (const [value, key] of Object.entries(mapping)) {
                         const clean = cleanValue(value);
@@ -489,7 +437,7 @@
                 return { original: line, italicInfo, line: newLine, isReplaced, key: keyName };
             });
 
-            // 上下文矫正（前缀匹配 + ID 序号）
+            // 上下文矫正
             for (let i = 0; i < lineData.length; i++) {
                 const data = lineData[i];
                 if (data.isReplaced) continue;
@@ -535,7 +483,7 @@
                 }
             }
 
-            // 第一遍修正（原逻辑）
+            // 第一遍修正
             for (let i = 0; i < lineData.length; i++) {
                 const data = lineData[i];
                 if (!data.isReplaced) continue;
@@ -594,7 +542,7 @@
             return resultLines.join('\n');
         }
 
-        // ---------- UTY处理逻辑 ----------
+        // ---------- UTY处理 ----------
         function processUTY(inputText) {
             const lines = inputText.split('\n');
             const lineData = lines.map(line => {
@@ -603,7 +551,6 @@
                 let isReplaced = false;
                 let keyName = null;
                 let italicInfo = null;
-
                 const match = protectedLine.match(/''(.*?)''/);
                 if (match) {
                     const full = match[0];
@@ -611,7 +558,6 @@
                     let hasSpan = false;
                     let spanTag = null;
                     let textBetween = inside;
-
                     if (inside.includes('<span')) {
                         const startTagEnd = inside.indexOf('>');
                         if (startTagEnd !== -1) {
@@ -630,7 +576,6 @@
                             }
                         }
                     }
-
                     let foundKey = null;
                     for (const [en, zh] of Object.entries(mapping)) {
                         if (en.toLowerCase() === textBetween.toLowerCase()) {
@@ -638,7 +583,6 @@
                             break;
                         }
                     }
-
                     if (foundKey !== null) {
                         const zhTranslation = mapping[foundKey];
                         let replaceText = zhTranslation;
@@ -655,7 +599,6 @@
                     }
                     italicInfo = { full, inside, hasSpan, spanTag, textBetween };
                 }
-
                 return { original: protectedLine, italicInfo, line: newLine, isReplaced, key: keyName };
             });
 
@@ -717,7 +660,13 @@
             });
             return resultLines.join('\n');
         }
+```
 
+---
+
+📦 Part 5 – JavaScript：主函数、进度条、自动加载、事件绑定
+
+```javascript
         // ---------- 主处理入口 ----------
         function handleProcess() {
             const input = inputArea.value;
@@ -729,24 +678,15 @@
                 statusDiv.textContent = '⚠️ 映射数据为空，请检查词典加载';
                 return;
             }
-
-            // 1. 全局颜色标准化（输入 → 控制码）
             let normalized = normalizeColorTags(input);
-
-            // 2. 预处理 {{Cite game}} 结构（内部字段整段匹配）
             normalized = preprocessCiteGame(normalized, isUTY);
-
-            // 3. 主处理（斜体匹配等）
             let result;
             if (isUTY) {
                 result = processUTY(normalized);
             } else {
                 result = processDR(normalized);
             }
-
-            // 4. 后处理：控制码转回标签
             result = denormalizeColorTags(result);
-
             outputArea.value = result;
             statusDiv.textContent = '✅ 处理完成';
         }
@@ -767,7 +707,7 @@
             }
         }
 
-        // ---------- 其他按钮 ----------
+        // ---------- 按钮事件 ----------
         async function copyOutput() {
             const text = outputArea.value;
             if (!text) { statusDiv.textContent = '📋 没有内容可复制'; return; }
@@ -798,68 +738,91 @@
             outputArea.value = '';
             statusDiv.textContent = '✅ 已应用到输入，输出已清空';
         });
-// ---------- 自动从 txtmap 目录加载词典（用于 GitHub Pages） ----------
-async function autoLoadFromTxtmap() {
-    const fileNames = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'uty'];
-    const basePath = 'txtmap/';
-    const loadedData = {};
-    let allLoaded = true;
 
-    for (const name of fileNames) {
-        try {
-            const url = basePath + name + '.js';
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const text = await response.text();
-            const rawObj = new Function('return ' + text)();
-            if (typeof rawObj === 'object' && rawObj !== null) {
-                loadedData[name] = rawObj;
+        // ---------- 进度更新 ----------
+        function updateProgress(current, total, fileName, statusText) {
+            const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+            progressBar.style.width = percent + '%';
+            progressText.textContent = `正在加载 ${fileName} (${percent}%)`;
+            if (statusText) {
+                loadStatus.textContent = statusText;
+            }
+        }
+
+        // ---------- 自动加载（带进度） ----------
+        async function autoLoadFromTxtmap() {
+            const fileNames = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'uty'];
+            const basePath = 'txtmap/';
+            const loadedData = {};
+            let allLoaded = true;
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = '准备加载...';
+
+            for (let i = 0; i < fileNames.length; i++) {
+                const name = fileNames[i];
+                updateProgress(i, fileNames.length, name, `正在加载 ${name}.js ...`);
+                try {
+                    const url = basePath + name + '.js';
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const text = await response.text();
+                    const rawObj = new Function('return ' + text)();
+                    if (typeof rawObj === 'object' && rawObj !== null) {
+                        loadedData[name] = rawObj;
+                    } else {
+                        throw new Error('解析结果不是有效对象');
+                    }
+                } catch (err) {
+                    console.warn(`自动加载 ${name}.js 失败:`, err);
+                    allLoaded = false;
+                    break;
+                }
+            }
+
+            if (allLoaded && Object.keys(loadedData).length === fileNames.length) {
+                progressBar.style.width = '100%';
+                progressText.textContent = '✅ 全部加载完成！';
+                dataStore = loadedData;
+                loadingOverlay.classList.add('hidden');
+                mainContent.style.display = 'block';
+                const success = loadMapping('ch1');
+                if (!success) {
+                    const first = Object.keys(dataStore)[0];
+                    if (first) {
+                        loadMapping(first);
+                        document.querySelectorAll('.mode-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                            if (btn.dataset.mode === first) btn.classList.add('active');
+                        });
+                        currentMode = first;
+                    }
+                }
+                loadStatus.textContent = '✅ 已自动加载 txtmap 目录下的词典';
+                loadStatus.className = 'status success';
+                return true;
             } else {
-                throw new Error('解析结果不是有效对象');
+                progressText.textContent = '⚠️ 自动加载失败，请手动选择文件夹';
+                loadStatus.textContent = '请手动选择包含词典的文件夹';
+                loadStatus.className = 'status error';
+                progressContainer.style.display = 'none';
+                return false;
             }
-        } catch (err) {
-            console.warn(`自动加载 ${name}.js 失败:`, err);
-            allLoaded = false;
-            break; // 只要有一个失败就放弃，让用户手动选择文件夹
         }
-    }
 
-    if (allLoaded && Object.keys(loadedData).length === fileNames.length) {
-        dataStore = loadedData;
-        // 隐藏加载覆盖层
-        loadingOverlay.classList.add('hidden');
-        mainContent.style.display = 'block';
-        // 加载默认章节（ch1）
-        const success = loadMapping('ch1');
-        if (!success) {
-            const first = Object.keys(dataStore)[0];
-            if (first) {
-                loadMapping(first);
-                // 更新按钮高亮
-                document.querySelectorAll('.mode-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (btn.dataset.mode === first) btn.classList.add('active');
-                });
-                currentMode = first;
+        // ---------- 尝试自动加载 ----------
+        autoLoadFromTxtmap().then(success => {
+            if (!success) {
+                loadingOverlay.classList.remove('hidden');
+                mainContent.style.display = 'none';
+                loadStatus.textContent = '请手动选择包含词典的文件夹';
+                loadStatus.className = 'status';
+                progressContainer.style.display = 'none';
             }
-        }
-        loadStatus.textContent = '✅ 已自动加载 txtmap 目录下的词典';
-        loadStatus.className = 'status success';
-        return true;
-    } else {
-        return false;
-    }
-}
-// ---------- 尝试自动加载，失败则显示选择文件夹界面 ----------
-autoLoadFromTxtmap().then(success => {
-    if (!success) {
-        loadingOverlay.classList.remove('hidden');
-        mainContent.style.display = 'none';
-        loadStatus.textContent = '请手动选择包含词典的文件夹';
-        loadStatus.className = 'status';
-    }
-});
-        // ---------- 加载文件夹 ----------
+        });
+
+        // ---------- 手动加载（带进度） ----------
         folderInput.addEventListener('change', async function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) {
@@ -870,6 +833,9 @@ autoLoadFromTxtmap().then(success => {
 
             loadStatus.textContent = '⏳ 正在读取文件...';
             loadStatus.className = 'status';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = '准备加载...';
 
             const fileMap = {};
             for (const file of files) {
@@ -887,15 +853,21 @@ autoLoadFromTxtmap().then(success => {
             if (found.length === 0) {
                 loadStatus.textContent = '❌ 未找到任何 ch1~ch5.js 或 uty.js 文件';
                 loadStatus.className = 'status error';
+                progressContainer.style.display = 'none';
                 return;
             }
 
             const loadedData = {};
             let errorCount = 0;
+            let processed = 0;
+            const totalFiles = found.length;
+
             for (const [mode, file] of Object.entries(fileMap)) {
+                processed++;
+                updateProgress(processed, totalFiles, file.name, `正在加载 ${file.name} ...`);
                 try {
                     const text = await file.text();
-                    const rawObj = (new Function('return ' + text))();
+                    const rawObj = new Function('return ' + text)();
                     if (typeof rawObj === 'object' && rawObj !== null) {
                         loadedData[mode] = rawObj;
                     } else {
@@ -909,9 +881,13 @@ autoLoadFromTxtmap().then(success => {
                 }
             }
 
+            progressBar.style.width = '100%';
+            progressText.textContent = '✅ 加载完成！';
+
             if (Object.keys(loadedData).length === 0) {
                 loadStatus.textContent = '❌ 所有文件加载失败，请检查格式';
                 loadStatus.className = 'status error';
+                progressContainer.style.display = 'none';
                 return;
             }
 
@@ -954,8 +930,11 @@ autoLoadFromTxtmap().then(success => {
         pasteInputBtn.addEventListener('click', pasteToInput);
 
         // 初始状态
+        loadingOverlay.classList.remove('hidden');
+        mainContent.style.display = 'none';
         loadStatus.textContent = '等待加载...';
         loadStatus.className = 'status';
+        progressContainer.style.display = 'none';
     })();
 </script>
 </body>
