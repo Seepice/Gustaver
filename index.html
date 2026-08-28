@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具（最终版）</title>
+    <title>Wiki 文本处理工具2.1.1</title>
     <style>
         /* ---------- 全局重置 ---------- */
         * { box-sizing: border-box; }
@@ -187,6 +187,7 @@
             <input type="file" id="folderInput" webkitdirectory directory multiple />
         </button>
         <div class="status" id="loadStatus">等待加载...</div>
+        <div id="loadProgress" style="margin-top: 12px; font-size: 14px; color: #4a5568; min-height: 24px;"></div>
     </div>
 
     <!-- ---------- 主界面（初始隐藏） ---------- -->
@@ -804,11 +805,15 @@ async function autoLoadFromTxtmap() {
     const basePath = 'txtmap/';
     const loadedData = {};
     let allLoaded = true;
+    let loadedCount = 0;  // 👈 新增：计数器
 
     for (const name of fileNames) {
-        try {
-            const url = basePath + name + '.js';
-            const response = await fetch(url);
+        // 👇 在这里插入以下三行
+        loadedCount++;
+        const progressEl = document.getElementById('loadProgress');
+        if (progressEl) {
+            progressEl.textContent = `正在加载 ${name}.js (${loadedCount}/${fileNames.length}) ...`;
+        }
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const text = await response.text();
             const rawObj = new Function('return ' + text)();
@@ -826,6 +831,8 @@ async function autoLoadFromTxtmap() {
 
     if (allLoaded && Object.keys(loadedData).length === fileNames.length) {
         dataStore = loadedData;
+        const progressEl = document.getElementById('loadProgress');
+if (progressEl) progressEl.textContent = '✅ 所有词典加载完成！';
         // 隐藏加载覆盖层
         loadingOverlay.classList.add('hidden');
         mainContent.style.display = 'block';
@@ -847,6 +854,8 @@ async function autoLoadFromTxtmap() {
         loadStatus.className = 'status success';
         return true;
     } else {
+        const progressEl = document.getElementById('loadProgress');
+if (progressEl) progressEl.textContent = '❌ 自动加载失败，请手动选择文件夹';
         return false;
     }
 }
