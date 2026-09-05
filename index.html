@@ -156,26 +156,27 @@
             <button class="mode-btn uty" data-mode="uty">UTY</button>
         </div>
         <div class="info" id="infoText">
-            📌 DR模式：斜体匹配（忽略大小写，自动转换颜色标签）<br />
-            🔸 UTY模式：直接替换中文（忽略大小写，自动转换颜色标签）<br />
-            ⚡ 加粗内术语自动替换（Turn/Phase/Action/check/Neutral）<br />
-            📦 <code>{{Cite game|...}}</code> 内部字段自动整段匹配（无需手动加斜体）
+            功能简介：<br />
+            🦆 DR模式: 替换为<code>{{DR文本|吧嗒吧嗒|chX}}</code>模板<br />
+            💛 UTY模式: 直接替换为中文<br />
+            替换范围：<br />
+                斜体的对话, <code>{{Cite game|哈喽! 我是Radiat·Aktinim! |Aktinim, 首次见面}}</code>←Cite<br />
+            game模板内文本,以及粗体内的战斗回合等。
         </div>
         <div class="row">
             <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">📥 输入文本</label>
-                <textarea id="inputArea" placeholder="在这里粘贴待处理的文本..."></textarea>
+                <label style="font-weight:600; font-size:14px; color:#2d3748;">↓📥 请输入文本</label>
+                <textarea id="inputArea" placeholder="在这里粘贴待处理的文本。"></textarea>
             </div>
             <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">📤 输出结果</label>
-                <textarea id="outputArea" placeholder="处理后的结果..." readonly></textarea>
+                <label style="font-weight:600; font-size:14px; color:#2d3748;">↓💻 协议 已 拟定。————Queen</label>
+                <textarea id="outputArea" placeholder="处理后的结果。" readonly></textarea>
             </div>
         </div>
         <div class="toolbar">
             <button class="btn" id="processBtn">▶ 开始处理</button>
             <button class="btn btn-secondary" id="copyBtn">📋 复制输出</button>
             <button class="btn btn-secondary" id="clearInputBtn">🗑 清空输入</button>
-            <button class="btn btn-secondary" id="pasteInputBtn">📎 粘贴到输入</button>
             <button class="btn btn-secondary" id="applyToInputBtn">🔄 应用到输入</button>
             <span class="status" id="status">就绪</span>
         </div>
@@ -197,7 +198,6 @@
     const processBtn = document.getElementById('processBtn');
     const copyBtn = document.getElementById('copyBtn');
     const clearInputBtn = document.getElementById('clearInputBtn');
-    const pasteInputBtn = document.getElementById('pasteInputBtn');
     const applyToInputBtn = document.getElementById('applyToInputBtn');
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
@@ -303,8 +303,8 @@
             statusDiv.textContent = `已加载 ${mode.toUpperCase()} 映射 (${Object.keys(mapping).length} 条唯一值)`;
         }
         infoText.innerHTML = isUTY
-            ? '🔸 UTY模式：直接替换中文（忽略大小写，自动转换颜色标签）<br />⚡ 加粗术语替换<br />📦 Cite Game 内部字段自动整段匹配'
-            : `📌 DR模式：斜体匹配（忽略大小写，自动转换颜色标签） → <code>{{DR文本|ID|${chapterParam}}}</code><br />⚡ 加粗术语替换<br />📦 Cite Game 内部字段自动整段匹配`;
+            ? '💛 UTY模式：替换为中文'
+            : `🦆 鸭子模式：斜体匹配`;
         return true;
     }
 
@@ -652,13 +652,6 @@ function handleProcess() {
         }
     }
     function clearInput() { inputArea.value = ''; statusDiv.textContent = '输出已清空'; }
-    async function pasteToInput() {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text) { inputArea.value = text; statusDiv.textContent = '📎 已粘贴到输入框'; }
-            else { statusDiv.textContent = '剪贴板为空'; }
-        } catch (err) { statusDiv.textContent = '无法读取剪贴板，请手动粘贴'; }
-    }
     applyToInputBtn.addEventListener('click', function() {
         const output = outputArea.value;
         if (!output) {
@@ -841,7 +834,6 @@ function handleProcess() {
     processBtn.addEventListener('click', handleProcess);
     copyBtn.addEventListener('click', copyOutput);
     clearInputBtn.addEventListener('click', clearInput);
-    pasteInputBtn.addEventListener('click', pasteToInput);
 
     // 初始状态
     loadingOverlay.classList.remove('hidden');
