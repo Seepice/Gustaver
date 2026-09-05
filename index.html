@@ -67,7 +67,7 @@
             display: none;
         }
         #progressBar {
-            width: 0%; height: 8px; background: #4299e1; border-radius: 10px;
+            width: 0%; height: 20px; background: #ff6b6b; border-radius: 10px;
             transition: width 0.3s ease;
         }
         #progressText {
@@ -234,37 +234,6 @@
         newParts1[newParts1.length - 2] = '';
         newParts2[newParts2.length - 2] = '';
         return newParts1.join('_') === newParts2.join('_');
-    }
-
-    function normalizeColorTags(text) {
-        const colorMap = {
-            'red': '\\cR', 'yellow': '\\cY', 'green': '\\cG', 'blue': '\\cB',
-            'cyan': '\\cC', 'magenta': '\\cM', 'orange': '\\cO', 'purple': '\\cP', 'white': '\\cW'
-        };
-        for (const [tag, code] of Object.entries(colorMap)) {
-            text = text.replace(new RegExp(`<${tag}>`, 'gi'), code);
-        }
-        const closeTags = ['yellow','red','green','blue','cyan','magenta','orange','purple','white'];
-        for (const tag of closeTags) {
-            text = text.replace(new RegExp(`</${tag}>`, 'gi'), '\\cW');
-        }
-        text = text.replace(/(\\c[A-Z])+/gi, (match) => {
-            const codes = match.match(/\\c[A-Z]/g);
-            return codes[codes.length - 1];
-        });
-        return text;
-    }
-
-    function denormalizeColorTags(text) {
-        const reverseMap = {
-            '\\cR': '<red>', '\\cY': '<yellow>', '\\cG': '<green>', '\\cB': '<blue>',
-            '\\cC': '<cyan>', '\\cM': '<magenta>', '\\cO': '<orange>', '\\cP': '<purple>',
-            '\\cW': '</yellow>'
-        };
-        for (const [code, tag] of Object.entries(reverseMap)) {
-            text = text.replace(new RegExp(code.replace(/\\/g, '\\\\'), 'g'), tag);
-        }
-        return text;
     }
 
     function applyBoldReplacements(line) {
@@ -639,7 +608,6 @@
             statusDiv.textContent = '⚠️ 映射数据为空，请检查词典加载';
             return;
         }
-        let normalized = normalizeColorTags(input);
         normalized = preprocessCiteGame(normalized, isUTY);
         let result;
         if (isUTY) {
@@ -647,7 +615,6 @@
         } else {
             result = processDR(normalized);
         }
-        result = denormalizeColorTags(result);
         outputArea.value = result;
         statusDiv.textContent = '✅ 处理完成';
     }
