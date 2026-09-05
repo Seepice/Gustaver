@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具（1.2.1）</title>
+    <title>Wiki 文本处理工具（1.3.0）</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -174,7 +174,7 @@
         <div class="toolbar">
             <button class="btn" id="processBtn">▶ 开始处理</button>
             <button class="btn btn-secondary" id="copyBtn">📋 复制输出</button>
-            <button class="btn btn-secondary" id="clearOutputBtn">🗑 清空输出</button>
+            <button class="btn btn-secondary" id="clearInputBtn">🗑 清空输入</button>
             <button class="btn btn-secondary" id="pasteInputBtn">📎 粘贴到输入</button>
             <button class="btn btn-secondary" id="applyToInputBtn">🔄 应用到输入</button>
             <span class="status" id="status">就绪</span>
@@ -196,7 +196,7 @@
     const infoText = document.getElementById('infoText');
     const processBtn = document.getElementById('processBtn');
     const copyBtn = document.getElementById('copyBtn');
-    const clearOutputBtn = document.getElementById('clearOutputBtn');
+    const clearInputBtn = document.getElementById('clearInputBtn');
     const pasteInputBtn = document.getElementById('pasteInputBtn');
     const applyToInputBtn = document.getElementById('applyToInputBtn');
     const progressContainer = document.getElementById('progressContainer');
@@ -651,7 +651,7 @@ function handleProcess() {
             statusDiv.textContent = '📋 已复制（降级方案）';
         }
     }
-    function clearOutput() { outputArea.value = ''; statusDiv.textContent = '输出已清空'; }
+    function clearInput() { inputArea.value = ''; statusDiv.textContent = '输出已清空'; }
     async function pasteToInput() {
         try {
             const text = await navigator.clipboard.readText();
@@ -840,7 +840,7 @@ function handleProcess() {
     });
     processBtn.addEventListener('click', handleProcess);
     copyBtn.addEventListener('click', copyOutput);
-    clearOutputBtn.addEventListener('click', clearOutput);
+    clearInputBtn.addEventListener('click', clearInput);
     pasteInputBtn.addEventListener('click', pasteToInput);
 
     // 初始状态
