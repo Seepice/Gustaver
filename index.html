@@ -302,9 +302,6 @@
             isUTY = false;
             statusDiv.textContent = `已加载 ${mode.toUpperCase()} 映射 (${Object.keys(mapping).length} 条唯一值)`;
         }
-        infoText.innerHTML = isUTY
-            ? '💛 UTY模式：替换为中文'
-            : `🦆 鸭子模式：斜体匹配`;
         return true;
     }
 
@@ -651,7 +648,7 @@ function handleProcess() {
             statusDiv.textContent = '📋 已复制（降级方案）';
         }
     }
-    function clearInput() { inputArea.value = ''; statusDiv.textContent = '输出已清空'; }
+    function clearInput() { inputArea.value = ''; statusDiv.textContent = '输入已清空'; }
     applyToInputBtn.addEventListener('click', function() {
         const output = outputArea.value;
         if (!output) {
