@@ -598,27 +598,32 @@
         return resultLines.join('\n');
     }
 
-    function handleProcess() {
-        const input = inputArea.value;
-        if (!input.trim()) {
-            statusDiv.textContent = '⚠️ 请先输入文本';
-            return;
-        }
-        if (Object.keys(mapping).length === 0) {
-            statusDiv.textContent = '⚠️ 映射数据为空，请检查词典加载';
-            return;
-        }
-        normalized = preprocessCiteGame(normalized, isUTY);
-        let result;
-        if (isUTY) {
-            result = processUTY(normalized);
-        } else {
-            result = processDR(normalized);
-        }
-        outputArea.value = result;
-        statusDiv.textContent = '✅ 处理完成';
+function handleProcess() {
+    const input = inputArea.value;
+    if (!input.trim()) {
+        statusDiv.textContent = '⚠️ 请先输入文本';
+        return;
+    }
+    if (Object.keys(mapping).length === 0) {
+        statusDiv.textContent = '⚠️ 映射数据为空，请检查词典加载';
+        return;
     }
 
+    // 直接使用 input，不再做颜色转换
+    let processed = preprocessCiteGame(input, isUTY);
+
+    let result;
+    if (isUTY) {
+        result = processUTY(processed);
+    } else {
+        result = processDR(processed);
+    }
+
+    // 不再做颜色反向转换
+    outputArea.value = result;
+    statusDiv.textContent = '✅ 处理完成';
+}
+    
     function switchMode(mode) {
         if (mode === currentMode) return;
         document.querySelectorAll('.mode-btn').forEach(btn => {
