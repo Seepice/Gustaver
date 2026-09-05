@@ -666,6 +666,7 @@
     });
 
     function updateProgress(current, total, fileName, statusText) {
+        progressContainer.style.display = 'block';
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
         progressBar.style.width = percent + '%';
         progressText.textContent = `正在加载 ${fileName} (${percent}%)`;
