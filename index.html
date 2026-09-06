@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具（1.3.0）</title>
+    <title>Wiki 文本处理工具（1.3.1）</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -220,6 +220,11 @@
         if (value.startsWith('*')) return value.substring(1);
         return value;
     }
+    function stripLeadingStar(str) {
+        if (str.startsWith('* ')) return str.substring(2);
+        if (str.startsWith('*')) return str.substring(1);
+        return str;
+    }
     function chineseNum(n) {
         const nums = ['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'];
         return nums[n] || String(n);
@@ -305,34 +310,36 @@
         return true;
     }
 
-    function processSegment(segment, isUTY) {
-        let text = segment.replace(/''(.*?)''/g, '$1');
-        if (isUTY) {
-            let found = null;
-            for (const [en, zh] of Object.entries(mapping)) {
-                if (en.toLowerCase() === text.toLowerCase()) {
-                    found = zh;
-                    break;
-                }
-            }
-            return found !== null ? found : segment;
-        } else {
-            let foundKey = null;
-            for (const [value, key] of Object.entries(mapping)) {
-                const clean = cleanValue(value);
-                if (clean.toLowerCase() === text.toLowerCase()) {
-                    foundKey = key;
-                    break;
-                }
-            }
-            if (foundKey !== null) {
-                return `{{DR文本|${foundKey}|${chapterParam}}}`;
-            } else {
-                return segment;
+function processSegment(segment, isUTY) {
+    let text = segment.replace(/''(.*?)''/g, '$1');
+    const textStripped = stripLeadingStar(text).toLowerCase();
+    if (isUTY) {
+        let found = null;
+        for (const [en, zh] of Object.entries(mapping)) {
+            const enStripped = stripLeadingStar(en).toLowerCase();
+            if (enStripped === textStripped) {
+                found = zh;
+                break;
             }
         }
+        return found !== null ? found : segment;
+    } else {
+        let foundKey = null;
+        for (const [value, key] of Object.entries(mapping)) {
+            const valStripped = stripLeadingStar(value).toLowerCase();
+            if (valStripped === textStripped) {
+                foundKey = key;
+                break;
+            }
+        }
+        if (foundKey !== null) {
+            return `{{DR文本|${foundKey}|${chapterParam}}}`;
+        } else {
+            return segment;
+        }
     }
-
+}
+    
     function preprocessCiteGame(text, isUTY) {
         return text.replace(/\{\{Cite game\|((?:[^|]+\|)*[^|]+)\}\}/g, (match, inner) => {
             const segments = inner.split('|');
@@ -341,96 +348,52 @@
         });
     }
 
-    function processDR(inputText) {
-        const lines = inputText.split('\n');
-        const protectedLines = lines.map(protectBold);
-        const lineData = protectedLines.map(line => {
-            const italicInfo = parseItalic(line);
-            let newLine, isReplaced, keyName;
-            if (italicInfo) {
-                const matchText = italicInfo.textBetween;
-                let foundKey = null;
-                for (const [value, key] of Object.entries(mapping)) {
-                    const clean = cleanValue(value);
-                    if (clean.toLowerCase() === matchText.toLowerCase()) {
-                        foundKey = key;
-                        break;
-                    }
+function processDR(inputText) {
+    const lines = inputText.split('\n');
+    const protectedLines = lines.map(protectBold);
+    const lineData = protectedLines.map(line => {
+        const italicInfo = parseItalic(line);
+        let newLine, isReplaced, keyName;
+        if (italicInfo) {
+            const matchText = italicInfo.textBetween;
+            let foundKey = null;
+            // 匹配时忽略开头的 * （两边都去）
+            const matchStripped = stripLeadingStar(matchText).toLowerCase();
+            for (const [value, key] of Object.entries(mapping)) {
+                const valStripped = stripLeadingStar(value).toLowerCase();
+                if (valStripped === matchStripped) {
+                    foundKey = key;
+                    break;
                 }
-                if (foundKey !== null) {
-                    const template = `{{DR文本|${foundKey}|${chapterParam}}}`;
-                    newLine = line.replace(/''.*?''/, template);
-                    isReplaced = true;
-                    keyName = foundKey;
-                } else {
-                    newLine = line;
-                    isReplaced = false;
-                    keyName = null;
-                }
+            }
+            if (foundKey !== null) {
+                const template = `{{DR文本|${foundKey}|${chapterParam}}}`;
+                newLine = line.replace(/''.*?''/, template);
+                isReplaced = true;
+                keyName = foundKey;
             } else {
-                newLine = line;
+                newLine = line;  // 保留原斜体? 此处原逻辑是 removeItalics，但你保留原斜体可能更好，按你的原意调整
                 isReplaced = false;
                 keyName = null;
             }
-            return { original: line, italicInfo, line: newLine, isReplaced, key: keyName };
-        });
-
-        for (let i = 0; i < lineData.length; i++) {
-            const data = lineData[i];
-            if (data.isReplaced) continue;
-            if (i > 0 && i < lineData.length - 1 &&
-                lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
-                const prevKey = lineData[i-1].key;
-                const nextKey = lineData[i+1].key;
-                const italicInfo = data.italicInfo;
-                if (!italicInfo) continue;
-                let correctedKey = null;
-                if (keysMostlySame(prevKey, nextKey)) {
-                    const idxPrev = keyOrder.indexOf(prevKey);
-                    const idxNext = keyOrder.indexOf(nextKey);
-                    if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
-                        const midIdx = (idxPrev + idxNext) >> 1;
-                        correctedKey = keyOrder[midIdx];
-                    }
-                }
-                if (correctedKey === null) {
-                    const prevPrefix = prevKey.substring(0, 5);
-                    const nextPrefix = nextKey.substring(0, 5);
-                    const matchText = italicInfo.textBetween;
-                    for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                        const prefix = matchText.substring(0, len);
-                        let matches = [];
-                        for (const [value, key] of Object.entries(mapping)) {
-                            if (cleanValue(value).startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
-                        matches = [];
-                        for (const [value, key] of Object.entries(mapping)) {
-                            if (cleanValue(value).startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
-                    }
-                }
-                if (correctedKey !== null) {
-                    const template = `{{DR文本|${correctedKey}|${chapterParam}}}`;
-                    data.line = data.original.replace(/''.*?''/, template);
-                    data.isReplaced = true;
-                    data.key = correctedKey;
-                }
-            }
+        } else {
+            newLine = line;
+            isReplaced = false;
+            keyName = null;
         }
+        return { original: line, italicInfo, line: newLine, isReplaced, key: keyName };
+    });
 
-        for (let i = 0; i < lineData.length; i++) {
-            const data = lineData[i];
-            if (!data.isReplaced) continue;
-            if (i === 0 || i === lineData.length - 1) continue;
-            const prevData = lineData[i-1];
-            const nextData = lineData[i+1];
-            if (!prevData.isReplaced || !nextData.isReplaced) continue;
-            const curKey = data.key;
-            const prevKey = prevData.key;
-            const nextKey = nextData.key;
-            if (keysMostlySame(curKey, prevKey) || keysMostlySame(curKey, nextKey)) continue;
+    // 上下文矫正（第二遍：中间行缺失时补全）
+    for (let i = 0; i < lineData.length; i++) {
+        const data = lineData[i];
+        if (data.isReplaced) continue;
+        if (i > 0 && i < lineData.length - 1 &&
+            lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
+            const prevKey = lineData[i-1].key;
+            const nextKey = lineData[i+1].key;
+            const italicInfo = data.italicInfo;
+            if (!italicInfo) continue;
             let correctedKey = null;
             if (keysMostlySame(prevKey, nextKey)) {
                 const idxPrev = keyOrder.indexOf(prevKey);
@@ -440,161 +403,221 @@
                     correctedKey = keyOrder[midIdx];
                 }
             }
-            if (correctedKey === null && data.italicInfo) {
+            if (correctedKey === null) {
                 const prevPrefix = prevKey.substring(0, 5);
                 const nextPrefix = nextKey.substring(0, 5);
-                const matchText = data.italicInfo.textBetween;
-                for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                    const prefix = matchText.substring(0, len);
+                const matchText = italicInfo.textBetween;
+                const matchStripped = stripLeadingStar(matchText);
+                for (let len = 3; len <= Math.min(10, matchStripped.length); len++) {
+                    const prefix = matchStripped.substring(0, len);
                     let matches = [];
                     for (const [value, key] of Object.entries(mapping)) {
-                        if (cleanValue(value).startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
+                        const valStripped = stripLeadingStar(value);
+                        if (valStripped.startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
                     }
                     if (matches.length === 1) { correctedKey = matches[0]; break; }
                     matches = [];
                     for (const [value, key] of Object.entries(mapping)) {
-                        if (cleanValue(value).startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
+                        const valStripped = stripLeadingStar(value);
+                        if (valStripped.startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
                     }
                     if (matches.length === 1) { correctedKey = matches[0]; break; }
                 }
             }
             if (correctedKey !== null) {
-                const oldTemplate = `{{DR文本|${curKey}|${chapterParam}}}`;
-                const newTemplate = `{{DR文本|${correctedKey}|${chapterParam}}}`;
-                data.line = data.line.replace(oldTemplate, newTemplate);
+                const template = `{{DR文本|${correctedKey}|${chapterParam}}}`;
+                data.line = data.original.replace(/''.*?''/, template);
+                data.isReplaced = true;
                 data.key = correctedKey;
-            } else {
-                data.line = data.original;
-                data.isReplaced = false;
-                data.key = null;
             }
         }
-
-        let resultLines = lineData.map(d => {
-            let line = restoreBold(d.line);
-            line = applyBoldReplacements(line);
-            return line;
-        });
-        return resultLines.join('\n');
     }
 
-    function processUTY(inputText) {
-        const lines = inputText.split('\n');
-        const lineData = lines.map(line => {
-            let protectedLine = protectBold(line);
-            let newLine = protectedLine;
-            let isReplaced = false;
-            let keyName = null;
-            let italicInfo = null;
-            const match = protectedLine.match(/''(.*?)''/);
-            if (match) {
-                const full = match[0];
-                const inside = match[1];
-                let hasSpan = false;
-                let spanTag = null;
-                let textBetween = inside;
-                if (inside.includes('<span')) {
-                    const startTagEnd = inside.indexOf('>');
-                    if (startTagEnd !== -1) {
-                        const closeTagStart = inside.lastIndexOf('</span>');
-                        if (closeTagStart !== -1 && closeTagStart > startTagEnd) {
-                            textBetween = inside.substring(startTagEnd + 1, closeTagStart);
-                            spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(closeTagStart);
+    // 第一遍修正（中间行已匹配但可能不协调）
+    for (let i = 0; i < lineData.length; i++) {
+        const data = lineData[i];
+        if (!data.isReplaced) continue;
+        if (i === 0 || i === lineData.length - 1) continue;
+        const prevData = lineData[i-1];
+        const nextData = lineData[i+1];
+        if (!prevData.isReplaced || !nextData.isReplaced) continue;
+        const curKey = data.key;
+        const prevKey = prevData.key;
+        const nextKey = nextData.key;
+        if (keysMostlySame(curKey, prevKey) || keysMostlySame(curKey, nextKey)) continue;
+        let correctedKey = null;
+        if (keysMostlySame(prevKey, nextKey)) {
+            const idxPrev = keyOrder.indexOf(prevKey);
+            const idxNext = keyOrder.indexOf(nextKey);
+            if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
+                const midIdx = (idxPrev + idxNext) >> 1;
+                correctedKey = keyOrder[midIdx];
+            }
+        }
+        if (correctedKey === null && data.italicInfo) {
+            const prevPrefix = prevKey.substring(0, 5);
+            const nextPrefix = nextKey.substring(0, 5);
+            const matchText = data.italicInfo.textBetween;
+            const matchStripped = stripLeadingStar(matchText);
+            for (let len = 3; len <= Math.min(10, matchStripped.length); len++) {
+                const prefix = matchStripped.substring(0, len);
+                let matches = [];
+                for (const [value, key] of Object.entries(mapping)) {
+                    const valStripped = stripLeadingStar(value);
+                    if (valStripped.startsWith(prefix) && key.startsWith(prevPrefix)) matches.push(key);
+                }
+                if (matches.length === 1) { correctedKey = matches[0]; break; }
+                matches = [];
+                for (const [value, key] of Object.entries(mapping)) {
+                    const valStripped = stripLeadingStar(value);
+                    if (valStripped.startsWith(prefix) && key.startsWith(nextPrefix)) matches.push(key);
+                }
+                if (matches.length === 1) { correctedKey = matches[0]; break; }
+            }
+        }
+        if (correctedKey !== null) {
+            const oldTemplate = `{{DR文本|${curKey}|${chapterParam}}}`;
+            const newTemplate = `{{DR文本|${correctedKey}|${chapterParam}}}`;
+            data.line = data.line.replace(oldTemplate, newTemplate);
+            data.key = correctedKey;
+        } else {
+            data.line = data.original;
+            data.isReplaced = false;
+            data.key = null;
+        }
+    }
+
+    let resultLines = lineData.map(d => {
+        let line = restoreBold(d.line);
+        line = applyBoldReplacements(line);
+        return line;
+    });
+    return resultLines.join('\n');
+}
+
+function processUTY(inputText) {
+    const lines = inputText.split('\n');
+    const lineData = lines.map(line => {
+        let protectedLine = protectBold(line);
+        let newLine = protectedLine;
+        let isReplaced = false;
+        let keyName = null;
+        let italicInfo = null;
+        const match = protectedLine.match(/''(.*?)''/);
+        if (match) {
+            const full = match[0];
+            const inside = match[1];
+            let hasSpan = false;
+            let spanTag = null;
+            let textBetween = inside;
+            if (inside.includes('<span')) {
+                const startTagEnd = inside.indexOf('>');
+                if (startTagEnd !== -1) {
+                    const closeTagStart = inside.lastIndexOf('</span>');
+                    if (closeTagStart !== -1 && closeTagStart > startTagEnd) {
+                        textBetween = inside.substring(startTagEnd + 1, closeTagStart);
+                        spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(closeTagStart);
+                        hasSpan = true;
+                    } else {
+                        const lastLt = inside.lastIndexOf('<');
+                        if (lastLt > startTagEnd) {
+                            textBetween = inside.substring(startTagEnd + 1, lastLt);
+                            spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(lastLt);
                             hasSpan = true;
-                        } else {
-                            const lastLt = inside.lastIndexOf('<');
-                            if (lastLt > startTagEnd) {
-                                textBetween = inside.substring(startTagEnd + 1, lastLt);
-                                spanTag = inside.substring(0, startTagEnd + 1) + inside.substring(lastLt);
-                                hasSpan = true;
-                            }
                         }
                     }
                 }
-                let foundKey = null;
-                for (const [en, zh] of Object.entries(mapping)) {
-                    if (en.toLowerCase() === textBetween.toLowerCase()) {
-                        foundKey = en;
-                        break;
-                    }
-                }
-                if (foundKey !== null) {
-                    const zhTranslation = mapping[foundKey];
-                    let replaceText = zhTranslation;
-                    if (hasSpan && spanTag) {
-                        replaceText = spanTag.replace(textBetween, zhTranslation);
-                    }
-                    newLine = protectedLine.replace(full, replaceText);
-                    isReplaced = true;
-                    keyName = foundKey;
-                } else {
-                    newLine = protectedLine.replace(/''(.*?)''/g, '$1');
-                    isReplaced = false;
-                    keyName = null;
-                }
-                italicInfo = { full, inside, hasSpan, spanTag, textBetween };
             }
-            return { original: protectedLine, italicInfo, line: newLine, isReplaced, key: keyName };
-        });
+            let foundKey = null;
+            const matchStripped = stripLeadingStar(textBetween).toLowerCase();
+            for (const [en, zh] of Object.entries(mapping)) {
+                const enStripped = stripLeadingStar(en).toLowerCase();
+                if (enStripped === matchStripped) {
+                    foundKey = en;
+                    break;
+                }
+            }
+            if (foundKey !== null) {
+                const zhTranslation = mapping[foundKey];
+                let replaceText = zhTranslation;
+                if (hasSpan && spanTag) {
+                    replaceText = spanTag.replace(textBetween, zhTranslation);
+                }
+                newLine = protectedLine.replace(full, replaceText);
+                isReplaced = true;
+                keyName = foundKey;
+            } else {
+                newLine = protectedLine.replace(/''(.*?)''/g, '$1');
+                isReplaced = false;
+                keyName = null;
+            }
+            italicInfo = { full, inside, hasSpan, spanTag, textBetween };
+        }
+        return { original: protectedLine, italicInfo, line: newLine, isReplaced, key: keyName };
+    });
 
-        for (let i = 0; i < lineData.length; i++) {
-            const data = lineData[i];
-            if (data.isReplaced) continue;
-            if (i > 0 && i < lineData.length - 1 &&
-                lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
-                const prevKey = lineData[i-1].key;
-                const nextKey = lineData[i+1].key;
-                const italicInfo = data.italicInfo;
-                if (!italicInfo) continue;
-                let correctedKey = null;
-                if (keysMostlySame(prevKey, nextKey)) {
-                    const idxPrev = keyOrder.indexOf(prevKey);
-                    const idxNext = keyOrder.indexOf(nextKey);
-                    if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
-                        const midIdx = (idxPrev + idxNext) >> 1;
-                        correctedKey = keyOrder[midIdx];
-                    }
+    // 上下文矫正
+    for (let i = 0; i < lineData.length; i++) {
+        const data = lineData[i];
+        if (data.isReplaced) continue;
+        if (i > 0 && i < lineData.length - 1 &&
+            lineData[i-1].isReplaced && lineData[i+1].isReplaced) {
+            const prevKey = lineData[i-1].key;
+            const nextKey = lineData[i+1].key;
+            const italicInfo = data.italicInfo;
+            if (!italicInfo) continue;
+            let correctedKey = null;
+            if (keysMostlySame(prevKey, nextKey)) {
+                const idxPrev = keyOrder.indexOf(prevKey);
+                const idxNext = keyOrder.indexOf(nextKey);
+                if (idxPrev !== -1 && idxNext !== -1 && Math.abs(idxPrev - idxNext) === 2) {
+                    const midIdx = (idxPrev + idxNext) >> 1;
+                    correctedKey = keyOrder[midIdx];
                 }
-                if (correctedKey === null) {
-                    const prevPrefix = prevKey.substring(0, 5);
-                    const nextPrefix = nextKey.substring(0, 5);
-                    const matchText = italicInfo.textBetween;
-                    for (let len = 3; len <= Math.min(10, matchText.length); len++) {
-                        const prefix = matchText.substring(0, len);
-                        let matches = [];
-                        for (const [en, zh] of Object.entries(mapping)) {
-                            if (en.startsWith(prefix) && en.startsWith(prevPrefix)) matches.push(en);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
-                        matches = [];
-                        for (const [en, zh] of Object.entries(mapping)) {
-                            if (en.startsWith(prefix) && en.startsWith(nextPrefix)) matches.push(en);
-                        }
-                        if (matches.length === 1) { correctedKey = matches[0]; break; }
+            }
+            if (correctedKey === null) {
+                const prevPrefix = prevKey.substring(0, 5);
+                const nextPrefix = nextKey.substring(0, 5);
+                const matchText = italicInfo.textBetween;
+                const matchStripped = stripLeadingStar(matchText);
+                for (let len = 3; len <= Math.min(10, matchStripped.length); len++) {
+                    const prefix = matchStripped.substring(0, len);
+                    let matches = [];
+                    for (const [en, zh] of Object.entries(mapping)) {
+                        const enStripped = stripLeadingStar(en);
+                        if (enStripped.startsWith(prefix) && en.startsWith(prevPrefix)) matches.push(en);
                     }
-                }
-                if (correctedKey !== null) {
-                    const zhTranslation = mapping[correctedKey];
-                    const full = italicInfo.full;
-                    let replaceText = zhTranslation;
-                    if (italicInfo.hasSpan && italicInfo.spanTag) {
-                        replaceText = italicInfo.spanTag.replace(italicInfo.textBetween, zhTranslation);
+                    if (matches.length === 1) { correctedKey = matches[0]; break; }
+                    matches = [];
+                    for (const [en, zh] of Object.entries(mapping)) {
+                        const enStripped = stripLeadingStar(en);
+                        if (enStripped.startsWith(prefix) && en.startsWith(nextPrefix)) matches.push(en);
                     }
-                    data.line = data.original.replace(full, replaceText);
-                    data.isReplaced = true;
-                    data.key = correctedKey;
+                    if (matches.length === 1) { correctedKey = matches[0]; break; }
                 }
+            }
+            if (correctedKey !== null) {
+                const zhTranslation = mapping[correctedKey];
+                const full = italicInfo.full;
+                let replaceText = zhTranslation;
+                if (italicInfo.hasSpan && italicInfo.spanTag) {
+                    replaceText = italicInfo.spanTag.replace(italicInfo.textBetween, zhTranslation);
+                }
+                data.line = data.original.replace(full, replaceText);
+                data.isReplaced = true;
+                data.key = correctedKey;
             }
         }
-
-        const resultLines = lineData.map(d => {
-            let line = restoreBold(d.line);
-            line = applyBoldReplacements(line);
-            return line;
-        });
-        return resultLines.join('\n');
     }
 
+    const resultLines = lineData.map(d => {
+        let line = restoreBold(d.line);
+        line = applyBoldReplacements(line);
+        return line;
+    });
+    return resultLines.join('\n');
+}
+    
 function handleProcess() {
     const input = inputArea.value;
     if (!input.trim()) {
