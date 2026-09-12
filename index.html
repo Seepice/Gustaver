@@ -6,17 +6,39 @@
     <title>Wiki 文本处理工具（1.3.1）</title>
     <style>
         :root {
-            --bg-body: #f0f2f5;
-            --bg-container: #ffffff;
-            --text-primary: #1a202c;
-            --text-secondary: #4a5568;
-        }
-        [data-theme="dark"] {
-            --bg-body: #1a202c;
-            --bg-container: #2d3748;
-            --text-primary: #f7fafc;
-            --text-secondary: #cbd5e0;
-        }
+    --bg-body: #f0f2f5;
+    --bg-container: #ffffff;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --bg-input: #fdfdfe;
+    --border-input: #cbd5e0;
+    --bg-status: #f7fafc;
+    --bg-modebar: #f1f4f9;
+    --border-modebar: #e2e8f0;
+    --bg-info: #ebf8ff;
+    --text-info: #718096;
+    --bg-btn-secondary: #edf2f7;
+    --text-btn-secondary: #2d3748;
+    --border-btn-secondary: #cbd5e0;
+}
+[data-theme="dark"] {
+    --bg-body: #1a202c;
+    --bg-container: #2d3748;
+    --text-primary: #f7fafc;
+    --text-secondary: #cbd5e0;
+    --text-muted: #a0aec0;
+    --bg-input: #4a5568;
+    --border-input: #718096;
+    --bg-status: #4a5568;
+    --bg-modebar: #4a5568;
+    --border-modebar: #718096;
+    --bg-info: #2d3748;
+    --text-info: #e2e8f0;
+    --bg-btn-secondary: #4a5568;
+    --text-btn-secondary: #f7fafc;
+    --border-btn-secondary: #718096;
+}
         * { box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -69,9 +91,7 @@
         #loadingOverlay .folder-btn input[type="file"] {
             position: absolute; inset: 0; opacity: 0; cursor: pointer;
         }
-        #loadingOverlay .status {
-            margin-top: 20px; font-size: 14px; color: var(--text-secodary); min-height: 24px;
-        }
+        #loadingOverlay .status { margin-top: 20px; font-size: 14px; color: var(--text-secondary); min-height: 24px; }
         #loadingOverlay .status.error { color: #e53e3e; }
         #loadingOverlay .status.success { color: #38a169; }
         #progressContainer {
@@ -85,30 +105,30 @@
         #progressText {
             font-size: 14px; color: #4a5568; margin-top: 4px; min-height: 20px;
         }
-        .mode-bar {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            background: #f1f4f9; border-radius: 40px; padding: 4px;
-            border: 1px solid #e2e8f0;
-        }
-        .mode-btn {
-            border: none; background: transparent;
-            padding: 10px 20px; border-radius: 32px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: all 0.2s; color: #4a5568;
-            white-space: nowrap;
-        }
+.mode-bar {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--bg-modebar); border-radius: 40px; padding: 4px;
+    border: 1px solid var(--border-modebar);
+}
+.mode-btn {
+    border: none; background: transparent;
+    padding: 10px 20px; border-radius: 32px;
+    font-weight: 600; font-size: 14px; cursor: pointer;
+    transition: all 0.2s; color: var(--text-secondary);
+    white-space: nowrap;
+}
         .mode-btn:hover { background: rgba(255,255,255,0.6); }
         .mode-btn.active { background: #4299e1; color: white; box-shadow: 0 4px 10px rgba(66,153,225,0.3); }
         .mode-btn.uty.active { background: #ed8936; color: white; box-shadow: 0 4px 10px rgba(237,137,54,0.3); }
         .row { display: flex; gap: 20px; flex: 1; }
         .col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        textarea {
-            width: 100%; height: 400px; padding: 12px;
-            font-size: 14px; font-family: 'Courier New', monospace;
-            border: 1px solid #cbd5e0; border-radius: 10px;
-            resize: vertical; background: #fdfdfe;
-            line-height: 1.6;
-        }
+textarea {
+    width: 100%; height: 400px; padding: 12px;
+    font-size: 14px; font-family: 'Courier New', monospace;
+    border: 1px solid var(--border-input); border-radius: 10px;
+    resize: vertical; background: var(--bg-input);
+    line-height: 1.6; color: var(--text-primary);
+}
         textarea:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.2); }
         .toolbar {
             display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
@@ -122,24 +142,40 @@
         }
         .btn:hover { background: #3182ce; transform: translateY(-1px); }
         .btn:active { transform: scale(0.97); }
-        .btn-secondary { background: #edf2f7; color: #2d3748; box-shadow: none; }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .status {
-            font-size: 13px; color: #4a5568;
-            background: #f7fafc; padding: 6px 16px; border-radius: 20px;
-            margin-left: auto;
-        }
-        .info {
-            font-size: 13px; color: #718096;
-            background: #ebf8ff; border-left: 4px solid #4299e1;
-            padding: 8px 16px; border-radius: 0 8px 8px 0;
-        }
+.btn-secondary {
+    background: var(--bg-btn-secondary);
+    color: var(--text-btn-secondary);
+    box-shadow: none;
+    border: 1px solid var(--border-btn-secondary);
+}
+.btn-secondary:hover { filter: brightness(0.95); }
+.status {
+    font-size: 13px; color: var(--text-secondary);
+    background: var(--bg-status); padding: 6px 16px; border-radius: 20px;
+    margin-left: auto;
+}
+.info {
+    font-size: 13px; color: var(--text-info);
+    background: var(--bg-info); border-left: 4px solid #4299e1;
+    padding: 8px 16px; border-radius: 0 8px 8px 0;
+}
         @media (max-width: 700px) {
             .row { flex-direction: column; }
             textarea { height: 250px; }
             .mode-btn { padding: 8px 14px; font-size: 13px; }
             #progressContainer { width: 90%; }
         }
+        #themeToggle {
+    background: var(--bg-btn-secondary);
+    color: var(--text-btn-secondary);
+    border: 1px solid var(--border-btn-secondary);
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+#themeToggle:hover { filter: brightness(0.95); }
     </style>
 </head>
 <body>
@@ -178,11 +214,11 @@
         </div>
         <div class="row">
             <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">↓📥 请输入文本</label>
+                <label style="font-weight:600; font-size:14px; color:var(--text-primary);">↓📥 请输入文本</label>
                 <textarea id="inputArea" placeholder="在这里粘贴待处理的文本。"></textarea>
             </div>
             <div class="col">
-                <label style="font-weight:600; font-size:14px; color:#2d3748;">↓💻 协议 已 拟定。————Queen</label>
+                <label style="font-weight:600; font-size:14px; color:var(--text-primary);">↓💻 协议 已 拟定。————Queen</label>
                 <textarea id="outputArea" placeholder="处理后的结果。" readonly></textarea>
             </div>
         </div>
@@ -191,6 +227,7 @@
             <button class="btn btn-secondary" id="copyBtn">📋 复制输出</button>
             <button class="btn btn-secondary" id="clearInputBtn">🗑 清空输入</button>
             <button class="btn btn-secondary" id="applyToInputBtn">🔄 应用到输入</button>
+            <button id="themeToggle">🌙</button>
             <span class="status" id="status">就绪</span>
         </div>
     </div>
@@ -874,13 +911,14 @@ function handleProcess() {
     loadStatus.textContent = '等待加载...';
     loadStatus.className = 'status';
     progressContainer.style.display = 'none';
-        const themeToggle = document.getElementById('themeToggle');
-    let darkMode = false;
-    
-    themeToggle.addEventListener('click', function() {
-        darkMode = !darkMode;
-        document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
-        themeToggle.textContent = darkMode ? '☀️' : '🌙';
+const themeToggle = document.getElementById('themeToggle');
+let darkMode = false;
+
+themeToggle.addEventListener('click', function() {
+    darkMode = !darkMode;
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
+    themeToggle.textContent = darkMode ? '☀️' : '🌙';
+});
 });
 })();
 </script>
