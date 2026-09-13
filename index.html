@@ -348,8 +348,8 @@ textarea {
     position: fixed;
     left: 0;
     top: 0;
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
     background-image: url('heart.png');
     background-size: contain;
     background-repeat: no-repeat;
@@ -1442,7 +1442,7 @@ themeToggle.addEventListener('click', function() {
             return;
         }
         const rect = target.getBoundingClientRect();
-        const heartSize = 32;
+        const heartSize = 20;
         const gap = 6;
         const x = rect.left - heartSize - gap;
         const y = rect.top + rect.height / 2 - heartSize / 2;
@@ -1507,13 +1507,23 @@ themeToggle.addEventListener('click', function() {
             return;
         }
 
-        // X 单次按下：同上逻辑
+        // X 单次按下：和 Shift 一致
         if ((e.key === 'x' || e.key === 'X') && proofState.buttonMode) {
             if (proofState.heartPos >= 0) {
                 proofState.heartPos = -1;
                 updateHeartPosition();
             } else {
-                exitButtonMode();
+                // 累积三下退出
+                if (now - proofState.shiftPressTime < 600) {
+                    proofState.shiftPressCount++;
+                } else {
+                    proofState.shiftPressCount = 1;
+                }
+                proofState.shiftPressTime = now;
+                if (proofState.shiftPressCount >= 3) {
+                    proofState.shiftPressCount = 0;
+                    exitButtonMode();
+                }
             }
             e.preventDefault();
             return;
@@ -1585,30 +1595,29 @@ themeToggle.addEventListener('click', function() {
             return;
         }
 
-        // 右：下一个未替换项，红心落在最后一个候选
+        // 右：下一个未替换项，心形回到未替换文本
         if (e.key === 'ArrowRight') {
             if (proofState.currentIndex < proofState.unmatched.length - 1) {
                 proofState.currentIndex++;
                 renderProofPage();
-                proofState.heartPos = proofState.choices.length;
+                proofState.heartPos = -1;
                 updateHeartPosition();
             }
             e.preventDefault();
             return;
         }
 
-        // 左：上一个未替换项，红心落在最后一个候选
+        // 左：上一个未替换项，心形回到未替换文本
         if (e.key === 'ArrowLeft') {
             if (proofState.currentIndex > 0) {
                 proofState.currentIndex--;
                 renderProofPage();
-                proofState.heartPos = proofState.choices.length;
+                proofState.heartPos = -1;
                 updateHeartPosition();
             }
             e.preventDefault();
             return;
         }
-    });
 
     // ========== 非 PC 隐藏按钮模式按钮 ==========
     (function() {
