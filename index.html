@@ -346,6 +346,8 @@ textarea {
 #heartCursor {
     display: none;
     position: fixed;
+    left: 0;
+    top: 0;
     width: 32px;
     height: 32px;
     background-image: url('heart.png');
@@ -353,7 +355,8 @@ textarea {
     background-repeat: no-repeat;
     pointer-events: none;
     z-index: 60;
-    transition: left 0.12s ease, top 0.12s ease;
+    will-change: transform;
+    image-rendering: pixelated;
 }
 #heartCursor.show { display: block; }
     </style>
@@ -1259,11 +1262,9 @@ themeToggle.addEventListener('click', function() {
         keep.textContent = '保留原文';
         keep.dataset.choiceIndex = '-1';
         keep.addEventListener('click', function() {
-            if (proofState.buttonMode) {
-                proofState.heartPos = -1;
-                updateHeartPosition();
-                return;
-            }
+            if (proofState.buttonMode) return;
+            handleKeep(item.absoluteIndex);
+        });
             handleKeep(item.absoluteIndex);
         });
         choicesEl.appendChild(keep);
@@ -1276,11 +1277,7 @@ themeToggle.addEventListener('click', function() {
             div.textContent = isUTY ? c.target : c.enText;
             div.dataset.choiceIndex = String(i);
             div.addEventListener('click', function() {
-                if (proofState.buttonMode) {
-                    proofState.heartPos = i;
-                    updateHeartPosition();
-                    return;
-                }
+                if (proofState.buttonMode) return;
                 handleReplace(item.absoluteIndex, c);
             });
             choicesEl.appendChild(div);
@@ -1449,10 +1446,10 @@ themeToggle.addEventListener('click', function() {
         const rect = target.getBoundingClientRect();
         const heartSize = 32;
         const gap = 6;
-        heart.style.left = (rect.left - heartSize - gap) + 'px';
-        heart.style.top = (rect.top + rect.height / 2 - heartSize / 2) + 'px';
+        const x = rect.left - heartSize - gap;
+        const y = rect.top + rect.height / 2 - heartSize / 2;
+        heart.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     }
-
     window.addEventListener('resize', function() {
         if (proofState.buttonMode) updateHeartPosition();
     });
@@ -1489,24 +1486,37 @@ themeToggle.addEventListener('click', function() {
 
         const now = Date.now();
 
-        // Shift 三下退出按钮模式
+        // Shift 单次按下：如果心形在候选上，退回未替换文本；否则累积三下退出按钮模式
         if (e.key === 'Shift') {
-            if (now - proofState.shiftPressTime < 600) {
-                proofState.shiftPressCount++;
-            } else {
-                proofState.shiftPressCount = 1;
-            }
-            proofState.shiftPressTime = now;
-            if (proofState.shiftPressCount >= 3 && proofState.buttonMode) {
+            if (proofState.buttonMode && proofState.heartPos >= 0) {
+                proofState.heartPos = -1;
+                updateHeartPosition();
                 proofState.shiftPressCount = 0;
-                exitButtonMode();
+                return;
+            }
+            if (proofState.buttonMode) {
+                if (now - proofState.shiftPressTime < 600) {
+                    proofState.shiftPressCount++;
+                } else {
+                    proofState.shiftPressCount = 1;
+                }
+                proofState.shiftPressTime = now;
+                if (proofState.shiftPressCount >= 3) {
+                    proofState.shiftPressCount = 0;
+                    exitButtonMode();
+                }
             }
             return;
         }
 
-        // X 退出按钮模式
+        // X 单次按下：同上逻辑
         if ((e.key === 'x' || e.key === 'X') && proofState.buttonMode) {
-            exitButtonMode();
+            if (proofState.heartPos >= 0) {
+                proofState.heartPos = -1;
+                updateHeartPosition();
+            } else {
+                exitButtonMode();
+            }
             e.preventDefault();
             return;
         }
@@ -1532,15 +1542,24 @@ themeToggle.addEventListener('click', function() {
         // Enter / Z
         if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
             if (proofState.heartPos === -1) {
-                if (proofState.choices.length > 0) {
+                if (proofState.choices.length >= 0) {
                     proofState.heartPos = 0;
                     updateHeartPosition();
                 }
             } else {
                 const item = proofState.unmatched[proofState.currentIndex];
-                const candidate = proofState.choices[proofState.heartPos];
-                if (item && candidate) {
-                    handleReplace(item.absoluteIndex, candidate);
+                let candidate = null;
+                if (proofState.heartPos === 0) {
+                    candidate = null; // 保留原文
+                } else {
+                    candidate = proofState.choices[proofState.heartPos - 1];
+                }
+                if (item) {
+                    if (candidate === null && proofState.heartPos === 0) {
+                        handleKeep(item.absoluteIndex);
+                    } else if (candidate) {
+                        handleReplace(item.absoluteIndex, candidate);
+                    }
                     proofState.heartPos = -1;
                 }
             }
@@ -1560,7 +1579,7 @@ themeToggle.addEventListener('click', function() {
 
         // 下
         if (e.key === 'ArrowDown') {
-            if (proofState.heartPos >= 0 && proofState.heartPos < proofState.choices.length - 1) {
+            if (proofState.heartPos >= 0 && proofState.heartPos < proofState.choices.length) {
                 proofState.heartPos++;
                 updateHeartPosition();
             }
@@ -1568,24 +1587,24 @@ themeToggle.addEventListener('click', function() {
             return;
         }
 
-        // 右：下一个未替换项
+        // 右：下一个未替换项，红心落在最后一个候选
         if (e.key === 'ArrowRight') {
             if (proofState.currentIndex < proofState.unmatched.length - 1) {
                 proofState.currentIndex++;
                 renderProofPage();
-                proofState.heartPos = proofState.choices.length - 1;
+                proofState.heartPos = proofState.choices.length;
                 updateHeartPosition();
             }
             e.preventDefault();
             return;
         }
 
-        // 左：上一个未替换项
+        // 左：上一个未替换项，红心落在最后一个候选
         if (e.key === 'ArrowLeft') {
             if (proofState.currentIndex > 0) {
                 proofState.currentIndex--;
                 renderProofPage();
-                proofState.heartPos = proofState.choices.length - 1;
+                proofState.heartPos = proofState.choices.length;
                 updateHeartPosition();
             }
             e.preventDefault();
