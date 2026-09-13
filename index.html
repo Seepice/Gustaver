@@ -64,7 +64,7 @@
         #loadingOverlay {
             position: absolute;
             inset: 0;
-            background: white;
+            background: var(--bg-container);
             border-radius: 16px;
             display: flex;
             flex-direction: column;
@@ -103,7 +103,7 @@
             transition: width 0.3s ease;
         }
         #progressText {
-            font-size: 14px; color: #4a5568; margin-top: 4px; min-height: 20px;
+            font-size: 14px; color: var(--text-secondary); margin-top: 4px; min-height: 20px;
         }
 .mode-bar {
     display: flex; gap: 8px; flex-wrap: wrap;
@@ -194,7 +194,6 @@ textarea {
         </div>
         <div class="status" id="loadStatus">等待加载...</div>
     </div>
-    <button id="themeToggle" style="position: absolute; top: 16px; right: 20px; z-index: 20; background: transparent; border: none; font-size: 28px; cursor: pointer; color: var(--text-primary);">🌙</button>
     <div id="mainContent" style="display:none;">
         <div class="mode-bar" id="modeBar">
             <button class="mode-btn active" data-mode="ch1">第1章</button>
@@ -227,8 +226,8 @@ textarea {
             <button class="btn btn-secondary" id="copyBtn">📋 复制输出</button>
             <button class="btn btn-secondary" id="clearInputBtn">🗑 清空输入</button>
             <button class="btn btn-secondary" id="applyToInputBtn">🔄 应用到输入</button>
-            <button id="themeToggle">🌙</button>
             <span class="status" id="status">就绪</span>
+            <button id="themeToggle">🌙</button>
         </div>
     </div>
 </div>
@@ -918,7 +917,6 @@ themeToggle.addEventListener('click', function() {
     darkMode = !darkMode;
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
     themeToggle.textContent = darkMode ? '☀️' : '🌙';
-});
 });
 })();
 </script>
