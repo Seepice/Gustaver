@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
@@ -281,6 +281,8 @@ textarea {
     cursor: pointer;
     white-space: pre-wrap;
     word-break: break-word;
+user-select: none;
+touch-action: manipulation;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 .proof-choice:hover {
@@ -1261,10 +1263,11 @@ themeToggle.addEventListener('click', function() {
         keep.className = 'proof-choice';
         keep.textContent = '保留原文';
         keep.dataset.choiceIndex = '-1';
-        keep.addEventListener('click', function() {
-            if (proofState.buttonMode) return;
-            handleKeep(item.absoluteIndex);
-        });
+keep.addEventListener('pointerdown', function(e) {
+    if (proofState.buttonMode) return;
+    e.preventDefault();
+    handleKeep(item.absoluteIndex);
+});
         choicesEl.appendChild(keep);
 
         // 候选
@@ -1274,10 +1277,11 @@ themeToggle.addEventListener('click', function() {
             div.className = 'proof-choice';
             div.textContent = isUTY ? c.target : c.enText;
             div.dataset.choiceIndex = String(i);
-            div.addEventListener('click', function() {
-                if (proofState.buttonMode) return;
-                handleReplace(item.absoluteIndex, c);
-            });
+div.addEventListener('pointerdown', function(e) {
+    if (proofState.buttonMode) return;
+    e.preventDefault();
+    handleReplace(item.absoluteIndex, c);
+});
             choicesEl.appendChild(div);
         }
 
