@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wiki 文本处理工具（1.3.1）</title>
+    <title>Wiki 文本处理工具（1.4.0）</title>
     <style>
         :root {
     --bg-body: #f0f2f5;
@@ -176,6 +176,186 @@ textarea {
     transition: all 0.2s;
 }
 #themeToggle:hover { filter: brightness(0.95); }
+/* ========== 手动快对：进度框 ========== */
+#progressBox {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--bg-info);
+    border-left: 4px solid #e53e3e;
+    border-radius: 0 8px 8px 0;
+    margin-top: 12px;
+}
+#progressBox.show { display: flex; }
+#progressBox .progress-msg {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+#progressBox .progress-msg .red { color: #e53e3e; font-weight: 700; }
+#progressBox .progress-enter-btn {
+    align-self: flex-start;
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 8px 28px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+#progressBox .progress-enter-btn:hover { background: #3182ce; }
+
+/* ========== 手动快对：独立页面 ========== */
+#proofPage {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    position: absolute;
+    inset: 0;
+    background: var(--bg-container);
+    border-radius: 16px;
+    padding: 24px;
+    z-index: 30;
+}
+#proofPage.show { display: flex; }
+
+#proofHeader {
+    font-size: 16px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+#proofHeader .red { color: #e53e3e; font-weight: 700; }
+
+#proofToolbar {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#proofToolbar button {
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid var(--border-btn-secondary);
+    background: var(--bg-btn-secondary);
+    color: var(--text-btn-secondary);
+}
+#proofToolbar button:hover { filter: brightness(0.95); }
+#proofToolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+#proofToolbar #proofThemeToggle {
+    margin-left: 4px;
+}
+
+#proofUnmatched {
+    padding: 12px 16px;
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 60px;
+}
+
+#proofChoices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.proof-choice {
+    padding: 12px 16px;
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    cursor: pointer;
+    white-space: pre-wrap;
+    word-break: break-word;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.proof-choice:hover {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+}
+
+/* ========== 退出确认弹窗 ========== */
+#exitConfirm {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+}
+#exitConfirm.show { display: flex; }
+#exitConfirm .dialog {
+    background: var(--bg-container);
+    border-radius: 16px;
+    padding: 24px 28px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+#exitConfirm .dialog-msg {
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+#exitConfirm .dialog-msg .red { color: #e53e3e; font-weight: 700; }
+#exitConfirm .dialog-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+#exitConfirm .btn-exit-yes {
+    background: #ed8936;
+    color: #c53030;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+}
+#exitConfirm .btn-exit-yes:hover { filter: brightness(0.95); }
+#exitConfirm .btn-exit-no {
+    background: white;
+    color: black;
+    border: 1px solid var(--border-btn-secondary);
+    padding: 8px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+#exitConfirm .btn-exit-no:hover { filter: brightness(0.95); }
+
+/* ========== 红心光标 ========== */
+#heartCursor {
+    display: none;
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    background-image: url('heart.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 60;
+    transition: left 0.12s ease, top 0.12s ease;
+}
+#heartCursor.show { display: block; }
     </style>
 </head>
 <body>
@@ -216,10 +396,14 @@ textarea {
                 <label style="font-weight:600; font-size:14px; color:var(--text-primary);">↓📥 请输入文本</label>
                 <textarea id="inputArea" placeholder="在这里粘贴待处理的文本。"></textarea>
             </div>
-            <div class="col">
-                <label style="font-weight:600; font-size:14px; color:var(--text-primary);">↓💻 协议 已 拟定。————Queen</label>
-                <textarea id="outputArea" placeholder="处理后的结果。" readonly></textarea>
-            </div>
+<div class="col">
+    <label style="font-weight:600; font-size:14px; color:var(--text-primary);">↓💻 协议 已 拟定。————Queen</label>
+    <textarea id="outputArea" placeholder="处理后的结果。" readonly></textarea>
+    <div id="progressBox">
+        <div class="progress-msg">*💻还剩 <span class="red" id="progressCount">0</span> 个。无法严格替换，是否进入手动快速校对？</div>
+        <button class="progress-enter-btn" id="progressEnterBtn">*🦌继续前进</button>
+    </div>
+</div>
         </div>
         <div class="toolbar">
             <button class="btn" id="processBtn">▶ 开始处理</button>
@@ -230,7 +414,33 @@ textarea {
             <button id="themeToggle">🌙</button>
         </div>
     </div>
+<!-- ========== 手动快对页面 ========== -->
+<div id="proofPage">
+    <div id="proofHeader">*还剩 <span class="red" id="proofRemain">0</span> 个，这是第 <span id="proofIndex">0</span> 个</div>
+    <div id="proofToolbar">
+        <button id="proofExitBtn">❌退出</button>
+        <button id="proofNextBtn">→下一个</button>
+        <button id="proofPrevBtn">←上一个</button>
+        <button id="proofModeBtn">💛按钮模式</button>
+        <button id="proofThemeToggle">🌙</button>
+    </div>
+    <div id="proofUnmatched"></div>
+    <div id="proofChoices"></div>
 </div>
+</div>
+<!-- ========== 退出确认弹窗 ========== -->
+<div id="exitConfirm">
+    <div class="dialog">
+        <div class="dialog-msg">*还剩 <span class="red" id="exitRemain">0</span> 个。确定退出吗？退出会全保留且无法再进入</div>
+        <div class="dialog-actions">
+            <button class="btn-exit-yes" id="exitYesBtn">退出</button>
+            <button class="btn-exit-no" id="exitNoBtn">不退出</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 红心光标 ========== -->
+<div id="heartCursor"></div>
 <script>
 (function() {
     'use strict';
@@ -536,12 +746,24 @@ function processDR(inputText) {
         }
     }
 
+    // 收集未替换项
+    const unmatched = [];
+    lineData.forEach((d, idx) => {
+        if (!d.isReplaced && d.italicInfo) {
+            unmatched.push({
+                absoluteIndex: idx,
+                text: d.italicInfo.textBetween,
+                italicFull: d.italicInfo.full,
+            });
+        }
+    });
+
     let resultLines = lineData.map(d => {
         let line = restoreBold(d.line);
         line = applyBoldReplacements(line);
         return line;
     });
-    return resultLines.join('\n');
+    return { text: resultLines.join('\n'), unmatched };
 }
 
 function processUTY(inputText) {
@@ -659,12 +881,24 @@ function processUTY(inputText) {
         }
     }
 
+    // 收集未替换项
+    const unmatched = [];
+    lineData.forEach((d, idx) => {
+        if (!d.isReplaced && d.italicInfo) {
+            unmatched.push({
+                absoluteIndex: idx,
+                text: d.italicInfo.textBetween,
+                italicFull: d.italicInfo.full,
+            });
+        }
+    });
+
     const resultLines = lineData.map(d => {
         let line = restoreBold(d.line);
         line = applyBoldReplacements(line);
         return line;
     });
-    return resultLines.join('\n');
+    return { text: resultLines.join('\n'), unmatched };
 }
     
 function handleProcess() {
@@ -678,18 +912,38 @@ function handleProcess() {
         return;
     }
 
-    // 直接使用 input，不再做颜色转换
     let processed = preprocessCiteGame(input, isUTY);
 
-    let result;
+    let result, unmatched;
     if (isUTY) {
-        result = processUTY(processed);
+        const r = processUTY(processed);
+        result = r.text;
+        unmatched = r.unmatched;
     } else {
-        result = processDR(processed);
+        const r = processDR(processed);
+        result = r.text;
+        unmatched = r.unmatched;
     }
 
-    // 不再做颜色反向转换
     outputArea.value = result;
+
+    // 重置手动快对状态
+    proofState.unmatched = unmatched;
+    proofState.currentIndex = 0;
+    proofState.heartPos = -1;
+    proofState.buttonMode = false;
+    proofState.choices = [];
+    proofState.cache.clear();
+
+    // 显示或隐藏进度框
+    const pbox = document.getElementById('progressBox');
+    if (unmatched.length > 0) {
+        document.getElementById('progressCount').textContent = unmatched.length;
+        pbox.classList.add('show');
+    } else {
+        pbox.classList.remove('show');
+    }
+
     statusDiv.textContent = '✅ 处理完成';
 }
     
@@ -706,6 +960,10 @@ function handleProcess() {
             mapping = {};
             keyOrder = [];
         }
+        // 切换章节时隐藏进度框
+        document.getElementById('progressBox').classList.remove('show');
+        proofState.unmatched = [];
+        proofState.cache.clear();
     }
 
     async function copyOutput() {
@@ -720,7 +978,13 @@ function handleProcess() {
             statusDiv.textContent = '📋 已复制（降级方案）';
         }
     }
-    function clearInput() { inputArea.value = ''; statusDiv.textContent = '输入已清空'; }
+    function clearInput() {
+        inputArea.value = '';
+        statusDiv.textContent = '输入已清空';
+        document.getElementById('progressBox').classList.remove('show');
+        proofState.unmatched = [];
+        proofState.cache.clear();
+    }
     applyToInputBtn.addEventListener('click', function() {
         const output = outputArea.value;
         if (!output) {
@@ -918,6 +1182,424 @@ themeToggle.addEventListener('click', function() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
     themeToggle.textContent = darkMode ? '☀️' : '🌙';
 });
+    // ========== 手动快对：状态 ==========
+    const proofState = {
+        unmatched: [],
+        currentIndex: 0,
+        heartPos: -1,
+        buttonMode: false,
+        choices: [],
+        cache: new Map(),
+        downPressCount: 0,
+        downPressTime: 0,
+        shiftPressCount: 0,
+        shiftPressTime: 0,
+    };
+
+    const CACHE_LIMIT = 125;
+    const SHORT_TEXT_THRESHOLD = 20;
+
+    // ========== 手动快对：页面控制 ==========
+    function openProofPage() {
+        if (proofState.unmatched.length === 0) return;
+        document.getElementById('proofPage').classList.add('show');
+        proofState.currentIndex = 0;
+        proofState.heartPos = -1;
+        proofState.buttonMode = false;
+        renderProofPage();
+    }
+
+    function closeProofPage() {
+        document.getElementById('proofPage').classList.remove('show');
+        document.getElementById('heartCursor').classList.remove('show');
+        document.getElementById('progressBox').classList.remove('show');
+        proofState.unmatched = [];
+        proofState.choices = [];
+        proofState.cache.clear();
+        proofState.buttonMode = false;
+        proofState.heartPos = -1;
+    }
+
+    function renderProofPage() {
+        if (proofState.unmatched.length === 0) {
+            closeProofPage();
+            return;
+        }
+        const idx = proofState.currentIndex;
+        const item = proofState.unmatched[idx];
+        if (!item) {
+            closeProofPage();
+            return;
+        }
+        document.getElementById('proofRemain').textContent = proofState.unmatched.length;
+        document.getElementById('proofIndex').textContent = item.absoluteIndex + 1;
+        document.getElementById('proofUnmatched').textContent = item.text;
+
+        // 获取候选：优先查缓存
+        const cacheKey = currentMode + '|' + item.text;
+        let candidates;
+        if (proofState.cache.has(cacheKey)) {
+            candidates = proofState.cache.get(cacheKey);
+        } else {
+            candidates = findSimilarEntries(item.text);
+            if (proofState.cache.size >= CACHE_LIMIT) {
+                const firstKey = proofState.cache.keys().next().value;
+                proofState.cache.delete(firstKey);
+            }
+            proofState.cache.set(cacheKey, candidates);
+        }
+        proofState.choices = candidates;
+
+        const choicesEl = document.getElementById('proofChoices');
+        choicesEl.innerHTML = '';
+
+        // 保留原文
+        const keep = document.createElement('div');
+        keep.className = 'proof-choice';
+        keep.textContent = '保留原文';
+        keep.dataset.choiceIndex = '-1';
+        keep.addEventListener('click', function() {
+            if (proofState.buttonMode) {
+                proofState.heartPos = -1;
+                updateHeartPosition();
+                return;
+            }
+            handleKeep(item.absoluteIndex);
+        });
+        choicesEl.appendChild(keep);
+
+        // 候选
+        for (let i = 0; i < candidates.length; i++) {
+            const c = candidates[i];
+            const div = document.createElement('div');
+            div.className = 'proof-choice';
+            div.textContent = isUTY ? c.target : c.enText;
+            div.dataset.choiceIndex = String(i);
+            div.addEventListener('click', function() {
+                if (proofState.buttonMode) {
+                    proofState.heartPos = i;
+                    updateHeartPosition();
+                    return;
+                }
+                handleReplace(item.absoluteIndex, c);
+            });
+            choicesEl.appendChild(div);
+        }
+
+        // 刷新红心位置（如果按钮模式）
+        if (proofState.buttonMode) {
+            updateHeartPosition();
+        }
+    }    // ========== 事件绑定：进度框“进入”按钮 ==========
+    document.getElementById('progressEnterBtn').addEventListener('click', function() {
+        openProofPage();
+    });
+
+    // ========== 事件绑定：对照页退出 ==========
+    document.getElementById('proofExitBtn').addEventListener('click', function() {
+        if (proofState.unmatched.length > 0) {
+            document.getElementById('exitRemain').textContent = proofState.unmatched.length;
+            document.getElementById('exitConfirm').classList.add('show');
+        } else {
+            closeProofPage();
+        }
+    });
+
+    document.getElementById('exitYesBtn').addEventListener('click', function() {
+        document.getElementById('exitConfirm').classList.remove('show');
+        closeProofPage();
+    });
+
+    document.getElementById('exitNoBtn').addEventListener('click', function() {
+        document.getElementById('exitConfirm').classList.remove('show');
+    });
+
+    // ========== 事件绑定：对照页主题切换（独立于主页面） ==========
+    document.getElementById('proofThemeToggle').addEventListener('click', function() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? '' : 'dark');
+        document.getElementById('proofThemeToggle').textContent = isDark ? '🌙' : '☀️';
+    });
+    // ========== 相似度计算 ==========
+    function jaccardSimilarity(a, b) {
+        if (a.length < 2 || b.length < 2) return 0;
+        const setA = new Set();
+        const setB = new Set();
+        for (let i = 0; i < a.length - 1; i++) setA.add(a.slice(i, i + 2));
+        for (let i = 0; i < b.length - 1; i++) setB.add(b.slice(i, i + 2));
+        let inter = 0;
+        for (const x of setA) if (setB.has(x)) inter++;
+        const union = setA.size + setB.size - inter;
+        return union === 0 ? 0 : inter / union;
+    }
+
+    function wordOverlapRatio(a, b) {
+        const tokenize = s => s.toLowerCase().split(/[\s,.!?;:"']+/).filter(Boolean);
+        const tokA = tokenize(a);
+        const tokB = tokenize(b);
+        if (tokA.length === 0 || tokB.length === 0) return 0;
+        const setB = new Set(tokB);
+        let inter = 0;
+        for (const w of tokA) if (setB.has(w)) inter++;
+        return inter / Math.max(tokA.length, tokB.length);
+    }
+
+    function similarity(a, b) {
+        if (a.length <= SHORT_TEXT_THRESHOLD) return jaccardSimilarity(a, b);
+        return wordOverlapRatio(a, b);
+    }
+
+    // ========== 相似搜索：从当前章节词典里找前 3 个 ==========
+    function findSimilarEntries(text) {
+        const lowerText = text.toLowerCase();
+        const minLen = lowerText.length * 0.85;
+        const candidates = [];
+        for (const [enText, target] of Object.entries(mapping)) {
+            // 长度过滤：比未替换文本短 15% 以上的剔除
+            if (enText.length < minLen) continue;
+            const sim = similarity(lowerText, enText.toLowerCase());
+            candidates.push({ enText, target, sim });
+        }
+        candidates.sort((a, b) => b.sim - a.sim);
+        return candidates.slice(0, 3);
+    }
+
+    // ========== 保留原文 ==========
+    function handleKeep(absoluteIndex) {
+        const itemIdx = proofState.unmatched.findIndex(x => x.absoluteIndex === absoluteIndex);
+        if (itemIdx === -1) return;
+        proofState.unmatched.splice(itemIdx, 1);
+        afterChoice();
+    }
+
+    // ========== 执行替换 ==========
+    function handleReplace(absoluteIndex, candidate) {
+        const lines = outputArea.value.split('\n');
+        const line = lines[absoluteIndex];
+        if (line === undefined) return;
+
+        const match = line.match(/''(.*?)''/);
+        if (!match) return;
+
+        let replacement;
+        if (isUTY) {
+            replacement = candidate.target;
+        } else {
+            replacement = `{{DR文本|${candidate.target}|${chapterParam}}}`;
+        }
+        lines[absoluteIndex] = line.replace(/''.*?''/, replacement);
+        outputArea.value = lines.join('\n');
+
+        const itemIdx = proofState.unmatched.findIndex(x => x.absoluteIndex === absoluteIndex);
+        if (itemIdx === -1) return;
+        proofState.unmatched.splice(itemIdx, 1);
+        afterChoice();
+    }
+
+    // ========== 选择后的公共处理 ==========
+    function afterChoice() {
+        if (proofState.unmatched.length === 0) {
+            closeProofPage();
+            return;
+        }
+        if (proofState.currentIndex >= proofState.unmatched.length) {
+            proofState.currentIndex = proofState.unmatched.length - 1;
+        }
+        proofState.heartPos = -1;
+        renderProofPage();
+    }
+
+    // ========== 下一个 / 上一个 ==========
+    document.getElementById('proofNextBtn').addEventListener('click', function() {
+        if (proofState.currentIndex < proofState.unmatched.length - 1) {
+            proofState.currentIndex++;
+            proofState.heartPos = -1;
+            renderProofPage();
+        }
+    });
+
+    document.getElementById('proofPrevBtn').addEventListener('click', function() {
+        if (proofState.currentIndex > 0) {
+            proofState.currentIndex--;
+            proofState.heartPos = -1;
+            renderProofPage();
+        }
+    });
+    // ========== 红心光标位置更新 ==========
+    function updateHeartPosition() {
+        const heart = document.getElementById('heartCursor');
+        if (!proofState.buttonMode) {
+            heart.classList.remove('show');
+            return;
+        }
+        heart.classList.add('show');
+
+        let target = null;
+        if (proofState.heartPos === -1) {
+            target = document.getElementById('proofUnmatched');
+        } else {
+            const choices = document.querySelectorAll('#proofChoices .proof-choice');
+            target = choices[proofState.heartPos];
+        }
+        if (!target) {
+            heart.classList.remove('show');
+            return;
+        }
+        const rect = target.getBoundingClientRect();
+        const heartSize = 32;
+        const gap = 6;
+        heart.style.left = (rect.left - heartSize - gap) + 'px';
+        heart.style.top = (rect.top + rect.height / 2 - heartSize / 2) + 'px';
+    }
+
+    window.addEventListener('resize', function() {
+        if (proofState.buttonMode) updateHeartPosition();
+    });
+
+    // ========== 进入 / 退出按钮模式 ==========
+    function enterButtonMode() {
+        proofState.buttonMode = true;
+        proofState.heartPos = -1;
+        document.getElementById('proofNextBtn').style.display = 'none';
+        document.getElementById('proofPrevBtn').style.display = 'none';
+        updateHeartPosition();
+    }
+
+    function exitButtonMode() {
+        proofState.buttonMode = false;
+        proofState.heartPos = -1;
+        document.getElementById('proofNextBtn').style.display = '';
+        document.getElementById('proofPrevBtn').style.display = '';
+        document.getElementById('heartCursor').classList.remove('show');
+    }
+
+    document.getElementById('proofModeBtn').addEventListener('click', function() {
+        if (proofState.buttonMode) {
+            exitButtonMode();
+        } else {
+            enterButtonMode();
+        }
+    });
+
+    // ========== 键盘事件 ==========
+    document.addEventListener('keydown', function(e) {
+        const proofPage = document.getElementById('proofPage');
+        if (!proofPage.classList.contains('show')) return;
+
+        const now = Date.now();
+
+        // Shift 三下退出按钮模式
+        if (e.key === 'Shift') {
+            if (now - proofState.shiftPressTime < 600) {
+                proofState.shiftPressCount++;
+            } else {
+                proofState.shiftPressCount = 1;
+            }
+            proofState.shiftPressTime = now;
+            if (proofState.shiftPressCount >= 3 && proofState.buttonMode) {
+                proofState.shiftPressCount = 0;
+                exitButtonMode();
+            }
+            return;
+        }
+
+        // X 退出按钮模式
+        if ((e.key === 'x' || e.key === 'X') && proofState.buttonMode) {
+            exitButtonMode();
+            e.preventDefault();
+            return;
+        }
+
+        // ↓ 三下进入按钮模式（仅非按钮模式）
+        if (e.key === 'ArrowDown' && !proofState.buttonMode) {
+            if (now - proofState.downPressTime < 600) {
+                proofState.downPressCount++;
+            } else {
+                proofState.downPressCount = 1;
+            }
+            proofState.downPressTime = now;
+            if (proofState.downPressCount >= 3) {
+                proofState.downPressCount = 0;
+                enterButtonMode();
+            }
+            e.preventDefault();
+            return;
+        }
+
+        if (!proofState.buttonMode) return;
+
+        // Enter / Z
+        if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
+            if (proofState.heartPos === -1) {
+                if (proofState.choices.length > 0) {
+                    proofState.heartPos = 0;
+                    updateHeartPosition();
+                }
+            } else {
+                const item = proofState.unmatched[proofState.currentIndex];
+                const candidate = proofState.choices[proofState.heartPos];
+                if (item && candidate) {
+                    handleReplace(item.absoluteIndex, candidate);
+                    proofState.heartPos = -1;
+                }
+            }
+            e.preventDefault();
+            return;
+        }
+
+        // 上
+        if (e.key === 'ArrowUp') {
+            if (proofState.heartPos > 0) {
+                proofState.heartPos--;
+                updateHeartPosition();
+            }
+            e.preventDefault();
+            return;
+        }
+
+        // 下
+        if (e.key === 'ArrowDown') {
+            if (proofState.heartPos >= 0 && proofState.heartPos < proofState.choices.length - 1) {
+                proofState.heartPos++;
+                updateHeartPosition();
+            }
+            e.preventDefault();
+            return;
+        }
+
+        // 右：下一个未替换项
+        if (e.key === 'ArrowRight') {
+            if (proofState.currentIndex < proofState.unmatched.length - 1) {
+                proofState.currentIndex++;
+                renderProofPage();
+                proofState.heartPos = proofState.choices.length - 1;
+                updateHeartPosition();
+            }
+            e.preventDefault();
+            return;
+        }
+
+        // 左：上一个未替换项
+        if (e.key === 'ArrowLeft') {
+            if (proofState.currentIndex > 0) {
+                proofState.currentIndex--;
+                renderProofPage();
+                proofState.heartPos = proofState.choices.length - 1;
+                updateHeartPosition();
+            }
+            e.preventDefault();
+            return;
+        }
+    });
+
+    // ========== 非 PC 隐藏按钮模式按钮 ==========
+    (function() {
+        const isPC = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        if (!isPC) {
+            document.getElementById('proofModeBtn').style.display = 'none';
+        }
+    })();
 })();
 </script>
 </body>
